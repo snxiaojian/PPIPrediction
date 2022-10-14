@@ -5,11 +5,12 @@ from Bio import SeqIO
 from concurrent.futures import ProcessPoolExecutor
 
 class PSSMGenerator:
-    temp_fasta_folder = "./data_process/temp/"
+    temp_fasta_folder = "./data_process/PSSM/temp/"
+    swissprot_folder = "./data/swissprot"
 
     def __init__(self, species):
             records = []
-            fasta_file = "./original_data/" + species + ".fasta"
+            fasta_file = "./data/input/" + species + ".fasta"
             with open(fasta_file, 'r') as f:
                 for record in SeqIO.parse(f, "fasta"):
                     records.append(record)
@@ -87,7 +88,7 @@ class PSSMGenerator:
         '''
         fasta_path = self.fasta_file_path(record)
         pssm_file_path = self.pssm_file_path(record)
-        cmd = 'psiblast -query '+ fasta_path + ' -db ./data/swissprot'  + ' -evalue 0.001  -num_threads 1 -num_iterations 3 -out_ascii_pssm ' + pssm_file_path
+        cmd = 'psiblast -query '+ fasta_path + ' -db ' + PSSMGenerator.swissprot_folder  + ' -evalue 0.001  -num_threads 1 -num_iterations 3 -out_ascii_pssm ' + pssm_file_path
         print("executing " + cmd)
         statu = os.system(cmd)
         assert statu == 0 , '生成PSSM文件失败,cmd命令有错'

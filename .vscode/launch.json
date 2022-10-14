@@ -5,10 +5,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Current File",
+            "name": "go_preprocess",
             "type": "python",
             "request": "launch",
-            "program": "${file}",
+            "program": "./data_process/go/go_preprocess.py",
             "console": "integratedTerminal",
             "justMyCode": true
         }
