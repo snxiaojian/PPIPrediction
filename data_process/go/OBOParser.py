@@ -13,11 +13,6 @@ import sys
 import os
 import re
 
-GraphEngines = ("pygraphviz", "pydot")
-
-__copyright__ = "Copyright (C) 2010-2016, H Tang et al., All rights reserved."
-__author__ = "various"
-
 class OBOReader(object):
     """Read goatools.org's obo file. Load into this iterable class.
 
@@ -127,7 +122,7 @@ class OBOReader(object):
                 self._chk_none(rec_curr.namespace, lnum)
                 rec_curr.namespace = field_value
             elif field_name == "is_a":
-                rec_curr._parents.append(field_value.split()[0])
+                rec_curr.parents.append(field_value.split()[0])
             elif field_name == "is_obsolete" and field_value == "true":
                 rec_curr.is_obsolete = True
             elif field_name in self.optional_attrs:
@@ -144,13 +139,12 @@ class OBOReader(object):
         # If we have a relationship, then we will split this into a further
         # dictionary.
 
-        _name = '_{:s}'.format(name) if name in self.attrs_nested else name
-        if hasattr(rec, _name):
+        if hasattr(rec, name):
             if name not in self.attrs_scalar:
                 if name not in self.attrs_nested:
                     getattr(rec, name).add(value)
                 else:
-                    self._add_nested(rec, _name, value)
+                    self._add_nested(rec, name, value)
             else:
                 raise Exception("ATTR({NAME}) ALREADY SET({VAL})".format(
                     NAME=name, VAL=getattr(rec, name)))
@@ -161,8 +155,8 @@ class OBOReader(object):
                 setattr(rec, name, set([value]))
             else:
                 # name = '_{:s}'.format(name)
-                setattr(rec, _name, defaultdict(list))
-                self._add_nested(rec, _name, value)
+                setattr(rec, name, defaultdict(list))
+                self._add_nested(rec, name, value)
 
     def _add_to_typedef(self, typedef_curr, line, lnum):
         """Add new fields to the current typedef."""
@@ -193,11 +187,9 @@ class OBOReader(object):
         if len(value) == 10:
             target_term = value
             getattr(rec, name)[name].append(target_term)
-            print(name)
         else:
             typedef, target_term = value.split(' ')
             getattr(rec, name)[name+" "+typedef].append(target_term)
-            print(name+" "+typedef)
 
     def _init_optional_attrs(self, optional_attrs):
         """Prepare to store data from user-desired optional fields.
@@ -252,8 +244,7 @@ class GOTerm:
         self.id = ""                # GO:NNNNNNN
         self.name = ""              # description
         self.namespace = ""         # BP, CC, MF
-        self._parents = []          # is_a basestring of parents
-        self.parents = []           # parent records
+        self.parents = []          # is_a basestring of parents
         self.children = []          # children records
         self.level = None           # shortest distance from root node
         self.depth = None           # longest distance from root node
@@ -421,264 +412,9 @@ class GODag(dict):
         self.typedefs = reader.typedefs
         self.optional_attrs = reader.optional_attrs
 
-        self.populate_terms()
         sys.stdout.write("{VER}\n".format(VER=version))
         return version
 
-    def populate_terms(self):
-
-        def _init_level(rec):
-            if rec.level is None:
-                if not rec.parents:
-                    rec.level = 0
-                else:
-                    rec.level = min(_init_level(rec) for rec in rec.parents) + 1
-            return rec.level
-
-        def _init_depth(rec):
-            if rec.depth is None:
-                if not rec.parents:
-                    rec.depth = 0
-                else:
-                    rec.depth = max(_init_depth(rec) for rec in rec.parents) + 1
-            return rec.depth
-
-        # Make parents and relationships references to the actual GO terms.
-        for rec in self.values():
-            rec.parents = [self[x] for x in rec._parents]
-
-            if hasattr(rec, '_relationship'):
-                rec.relationship = defaultdict(set)
-                for (typedef, terms) in rec._relationship.items():
-                    rec.relationship[typedef].update(set([self[x] for x in terms]))
-                delattr(rec, '_relationship')
-
-        # populate children, levels and add inverted relationships
-        for rec in self.values():
-            for p in rec.parents:
-                if rec not in p.children:
-                    p.children.append(rec)
-
-            # Add invert relationships
-            if hasattr(rec, 'relationship'):
-                for (typedef, terms) in rec.relationship.items():
-                    invert_typedef = self.typedefs[typedef].inverse_of
-                    if invert_typedef:
-                        # Add inverted relationship
-                        for t in terms:
-                            if not hasattr(t, 'relationship'):
-                                t.relationship = defaultdict(set)
-                            t.relationship[invert_typedef].add(rec)
-
-            if rec.level is None:
-                _init_level(rec)
-
-            if rec.depth is None:
-                _init_depth(rec)
-
-    def write_dag(self, out=sys.stdout):
-        """Write info for all GO Terms in obo file, sorted numerically."""
-        for rec_id, rec in sorted(self.items()):
-            print(rec, file=out)
-
-    def write_hier_all(self, out=sys.stdout,
-                       len_dash=1, max_depth=None, num_child=None, short_prt=False):
-        """Write hierarchy for all GO Terms in obo file."""
-        # Print: [biological_process, molecular_function, and cellular_component]
-        for go_id in ['GO:0008150', 'GO:0003674', 'GO:0005575']:
-            self.write_hier(go_id, out, len_dash, max_depth, num_child, short_prt, None)
-
-    def write_hier(self, GO_id, out=sys.stdout,
-                       len_dash=1, max_depth=None, num_child=None, short_prt=False,
-                       include_only=None, go_marks=None):
-        """Write hierarchy for a GO Term."""
-        gos_printed = set()
-        self[GO_id].write_hier_rec(gos_printed, out, len_dash, max_depth, num_child,
-            short_prt, include_only, go_marks)
 
     @staticmethod
     def id2int(GO_id): return int(GO_id.replace("GO:", "", 1))
-
-    def query_term(self, term, verbose=False):
-        if term not in self:
-            sys.sdterr.write("Term %s not found!\n" % term)
-            return
-
-        rec = self[term]
-        if verbose:
-            print(rec)
-            sys.stderr.write("all parents: {}\n".format(
-                repr(rec.get_all_parents())))
-            sys.stderr.write("all children: {}\n".format(
-                repr(rec.get_all_children())))
-        return rec
-
-    def paths_to_top(self, term):
-        """ Returns all possible paths to the root node
-
-            Each path includes the term given. The order of the path is
-            top -> bottom, i.e. it starts with the root and ends with the
-            given term (inclusively).
-
-            Parameters:
-            -----------
-            - term:
-                the id of the GO term, where the paths begin (i.e. the
-                accession 'GO:0003682')
-
-            Returns:
-            --------
-            - a list of lists of GO Terms
-        """
-        # error handling consistent with original authors
-        if term not in self:
-            sys.stderr.write("Term %s not found!\n" % term)
-            return
-
-        def _paths_to_top_recursive(rec):
-            if rec.level == 0:
-                return [[rec]]
-            paths = []
-            for parent in rec.parents:
-                top_paths = _paths_to_top_recursive(parent)
-                for top_path in top_paths:
-                    top_path.append(rec)
-                    paths.append(top_path)
-            return paths
-
-        go_term = self[term]
-        return _paths_to_top_recursive(go_term)
-
-    def _label_wrap(self, label):
-        wrapped_label = r"%s\n%s" % (label,
-                                     self[label].name.replace(",", r"\n"))
-        return wrapped_label
-
-    def make_graph_pydot(self, recs, nodecolor,
-                     edgecolor, dpi,
-                     draw_parents=True, draw_children=True):
-        """draw AMIGO style network, lineage containing one query record."""
-        import pydot
-        G = pydot.Dot(graph_type='digraph', dpi="{}".format(dpi)) # Directed Graph
-        edgeset = set()
-        usr_ids = [rec.id for rec in recs]
-        for rec in recs:
-            if draw_parents:
-                edgeset.update(rec.get_all_parent_edges())
-            if draw_children:
-                edgeset.update(rec.get_all_child_edges())
-
-        lw = self._label_wrap
-        rec_id_set = set([rec_id for endpts in edgeset for rec_id in endpts])
-        nodes = {str(ID):pydot.Node(
-              lw(ID).replace("GO:",""),  # Node name
-              shape="box",
-              style="rounded, filled",
-              # Highlight query terms in plum:
-              fillcolor="beige" if ID not in usr_ids else "plum",
-              color=nodecolor)
-                for ID in rec_id_set}
-
-        # add nodes explicitly via add_node
-        for rec_id, node in nodes.items():
-            G.add_node(node)
-
-        for src, target in edgeset:
-            # default layout in graphviz is top->bottom, so we invert
-            # the direction and plot using dir="back"
-            G.add_edge(pydot.Edge(nodes[target], nodes[src],
-              shape="normal",
-              color=edgecolor,
-              label="is_a",
-              dir="back"))
-
-        return G
-
-    def make_graph_pygraphviz(self, recs, nodecolor,
-                     edgecolor, dpi,
-                     draw_parents=True, draw_children=True):
-        # draw AMIGO style network, lineage containing one query record
-        import pygraphviz as pgv
-
-        G = pgv.AGraph(name="GO tree")
-        edgeset = set()
-        for rec in recs:
-            if draw_parents:
-                edgeset.update(rec.get_all_parent_edges())
-            if draw_children:
-                edgeset.update(rec.get_all_child_edges())
-
-        edgeset = [(self._label_wrap(a), self._label_wrap(b))
-                   for (a, b) in edgeset]
-
-        # add nodes explicitly via add_node
-        # adding nodes implicitly via add_edge misses nodes
-        # without at least one edge
-        for rec in recs:
-            G.add_node(self._label_wrap(rec.id))
-
-        for src, target in edgeset:
-            # default layout in graphviz is top->bottom, so we invert
-            # the direction and plot using dir="back"
-            G.add_edge(target, src)
-
-        G.graph_attr.update(dpi="%d" % dpi)
-        G.node_attr.update(shape="box", style="rounded,filled",
-                           fillcolor="beige", color=nodecolor)
-        G.edge_attr.update(shape="normal", color=edgecolor,
-                           dir="back", label="is_a")
-        # highlight the query terms
-        for rec in recs:
-            try:
-                q = G.get_node(self._label_wrap(rec.id))
-                q.attr.update(fillcolor="plum")
-            except:
-                continue
-
-        return G
-
-    def draw_lineage(self, recs, nodecolor="mediumseagreen",
-                     edgecolor="lightslateblue", dpi=96,
-                     lineage_img="GO_lineage.png", engine="pygraphviz",
-                     gml=False, draw_parents=True, draw_children=True):
-        assert engine in GraphEngines
-        if engine == "pygraphviz":
-            G = self.make_graph_pygraphviz(recs, nodecolor, edgecolor, dpi,
-                              draw_parents=draw_parents, draw_children=draw_children)
-        else:
-            G = self.make_graph_pydot(recs, nodecolor, edgecolor, dpi,
-                              draw_parents=draw_parents, draw_children=draw_children)
-
-        if gml:
-            import networkx as nx  # use networkx to do the conversion
-            pf = lineage_img.rsplit(".", 1)[0]
-            NG = nx.from_agraph(G) if engine == "pygraphviz" else nx.from_pydot(G)
-
-            del NG.graph['node']
-            del NG.graph['edge']
-            gmlfile = pf + ".gml"
-            nx.write_gml(NG, gmlfile)
-            sys.stderr.write("GML graph written to {0}\n".format(gmlfile))
-
-        sys.stderr.write(("lineage info for terms %s written to %s\n" %
-                          ([rec.id for rec in recs], lineage_img)))
-
-        if engine == "pygraphviz":
-            G.draw(lineage_img, prog="dot")
-        else:
-            G.write_png(lineage_img)
-
-    def update_association(self, association):
-        bad_terms = set()
-        for terms in association.values():
-            parents = set()
-            for term in terms:
-                try:
-                    parents.update(self[term].get_all_parents())
-                except:
-                    bad_terms.add(term.strip())
-            terms.update(parents)
-        if bad_terms:
-            sys.stderr.write("terms not found: %s\n" % (bad_terms,))
-
-# Copyright (C) 2010-2016, H Tang et al., All rights reserved.
