@@ -5,10 +5,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "go_preprocess",
+            "name": "GOPYGConverter",
             "type": "python",
             "request": "launch",
-            "program": "./data_process/go/go_preprocess.py",
+            "program": "./go_rgcn/GOPYGConverter.py",
             "console": "integratedTerminal",
             "justMyCode": true
         }

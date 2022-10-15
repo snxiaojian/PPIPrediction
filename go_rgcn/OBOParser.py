@@ -250,6 +250,7 @@ class GOTerm:
         self.depth = None           # longest distance from root node
         self.is_obsolete = False    # is_obsolete
         self.alt_ids = []           # alternative identifiers
+        self.index = 0              # index in the obo file
 
     def __str__(self):
         obsolete = "obsolete" if self.is_obsolete else ""
@@ -393,7 +394,8 @@ class GODag(dict):
 
         sys.stdout.write("load obo file %s\n" % obo_file)
         reader = OBOReader(obo_file, optional_attrs)
-        for rec in reader:
+        for index, rec in enumerate(reader):
+            rec.index = index
             if not rec.is_obsolete:
                 self[rec.id] = rec
             for alt in rec.alt_ids:
@@ -414,7 +416,3 @@ class GODag(dict):
 
         sys.stdout.write("{VER}\n".format(VER=version))
         return version
-
-
-    @staticmethod
-    def id2int(GO_id): return int(GO_id.replace("GO:", "", 1))

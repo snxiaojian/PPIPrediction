@@ -19,26 +19,6 @@ def get_short_ns(long_ns):
         raise ValueError("Can't recognize %s" % long_ns)
 
 
-
-class GOTerm(object):
-    def __init__(self, go_term):
-        """Definition of an GO term.
-        Attributes:
-            - id: accession of GO term, e.g. GO:0000005
-            - parents: set, parents of this term
-            - name: name of GO term
-            - ns: namespace the term belongs to
-            - children: set, children of this term
-            - depth: the depth of term in the whole GO
-        :param go_term: instance of the HPO term
-        :return: None
-        """
-        self.id = go_term.id
-        self.parents = go_term.parents
-        self.name = go_term.name
-        self.ns = get_short_ns(go_term.namespace)
-
-
 class GeneOntology(dict):
     """Definition of GO, it is inheritance of dict.
     Attributes:
@@ -56,4 +36,4 @@ class GeneOntology(dict):
         go_dag = GODag(obo_file_path, ['relationship','intersection_of'])
         self.alt_ids = go_dag.alt_ids
         for go_id, go_term in go_dag.items():
-            self[go_id] = GOTerm(go_term)
+            self[go_id] = go_term
