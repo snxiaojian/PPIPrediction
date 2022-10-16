@@ -6,7 +6,7 @@ from concurrent.futures import ProcessPoolExecutor
 
 class PSSMGenerator:
     temp_fasta_folder = "./data_process/PSSM/temp/"
-    swissprot_folder = "./data/swissprot"
+    uniprot_folder = "./data/uniprot"
 
     def __init__(self, species):
             records = []
@@ -88,7 +88,7 @@ class PSSMGenerator:
         '''
         fasta_path = self.fasta_file_path(record)
         pssm_file_path = self.pssm_file_path(record)
-        cmd = 'psiblast -query '+ fasta_path + ' -db ' + PSSMGenerator.swissprot_folder  + ' -evalue 0.001  -num_threads 1 -num_iterations 3 -out_ascii_pssm ' + pssm_file_path
+        cmd = 'psiblast -query '+ fasta_path + ' -db ' + PSSMGenerator.uniprot_folder  + ' -evalue 0.001  -num_threads 1 -num_iterations 3 -out_ascii_pssm ' + pssm_file_path
         print("executing " + cmd)
         statu = os.system(cmd)
         assert statu == 0 , '生成PSSM文件失败,cmd命令有错'

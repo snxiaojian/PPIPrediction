@@ -15,6 +15,7 @@ class GOAParser:
             fp.write(j)
 
     evidence = ['EXP', 'IDA', 'IPI', 'IMP', 'IGI', 'IEP', 'TAS', 'IC']
+    taxon = ["taxon:9606","taxon:7227","taxon:3702","taxon:559292"]
 
     def parse(self, file: str):
         annotation = defaultdict(list)
@@ -27,9 +28,11 @@ class GOAParser:
                 qualifier = entries[3]
                 evidence_code = entries[6]
                 db_object_type = entries[11]
+                taxon = entries[12]
                 if db_object_type == "protein" \
                         and "NOT" not in qualifier \
-                        and evidence_code in GOAParser.evidence:
+                        and evidence_code in GOAParser.evidence \
+                        and taxon in GOAParser.taxon:
                     protein = entries[1]
                     go_term = entries[4]
                     annotation[protein].append(go_term)
