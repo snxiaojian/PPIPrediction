@@ -88,20 +88,24 @@ class PSSMGenerator:
         '''
         fasta_path = self.fasta_file_path(record)
         pssm_file_path = self.pssm_file_path(record)
-        cmd = 'psiblast -query '+ fasta_path + ' -db ' + PSSMGenerator.uniprot_folder  + ' -evalue 0.001  -num_threads 1 -num_iterations 3 -out_ascii_pssm ' + pssm_file_path
+        print("generating: " + pssm_file_path)
+        cmd = 'psiblast -query '+ fasta_path + ' -db ' + PSSMGenerator.uniprot_folder  + ' -evalue 0.001  -num_threads 1 -num_iterations 3 -out_ascii_pssm ' + pssm_file_path + "> /dev/null 2>&1"
         print("executing " + cmd)
         statu = os.system(cmd)
         assert statu == 0 , '生成PSSM文件失败,cmd命令有错'
     
     def process_with_record(self, record):
+        pssm_file_path = self.pssm_file_path(record)
+        if os.path.exists(pssm_file_path):
+            print("pssm file already exists: " + pssm_file_path)
+            return
         self._write_record_to_tmp_file(record)
         self._generatePSSMFile(record)
         self._delete_fasta_temp_file(record)
 
     def generate(self):
         with ProcessPoolExecutor() as pool:
-            for record in self.records:
-                pool.submit(self.process_with_record, record)
+            pool.map(self.process_with_record,self.records, chunksize=6)
 
 def get_fasta_names_from_folder(folder):
     return [name for name in os.listdir(folder) if name.endswith(".fasta")]
@@ -109,7 +113,8 @@ def get_fasta_names_from_folder(folder):
 
 if __name__ == "__main__":
     files = get_fasta_names_from_folder("./data/input")
-    for file in files:
-        print("processing " + file)
-        pssm_generator = PSSMGenerator(file.split(".")[0])
-        pssm_generator.generate()
+    file = files[0]
+    # for file in files:
+    print("processing " + file)
+    pssm_generator = PSSMGenerator(file.split(".")[0])
+    pssm_generator.generate()

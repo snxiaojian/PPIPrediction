@@ -3,16 +3,20 @@ import json
 
 
 class GOAParser:
-    def __init__(self, goa_files: list):
+    def __init__(self, goa_files):
         self.anotation = {}
-        for goa_file in goa_files:
+        for goa_file in GOAParser.goa_files:
             self.anotation.update(self.parse(goa_file))
-        self.save_anotation_to_file()
-
-    def save_anotation_to_file(self):
-        with open('./data/go/goa.json', 'w') as fp:
-            j = json.dumps(self.anotation)
-            fp.write(j)
+ 
+    @staticmethod
+    def parsed_annotation():
+        goa_files: list = [
+            './data/go/goa_human.gaf',
+            './data/go/fb.gaf',
+            './data/go/sgd.gaf',
+            './data/go/tair.gaf',
+        ]
+        return GOAParser(goa_files).anotation
 
     def parse(self, file: str):
         annotation = defaultdict(list)
@@ -27,13 +31,3 @@ class GOAParser:
                     go_term = entries[4]
                     annotation[key].append(go_term)
         return annotation
-
-
-if __name__ == "__main__":
-    goa_files = [
-        './data/go/goa_human.gaf',
-        './data/go/fb.gaf',
-        './data/go/sgd.gaf',
-        './data/go/tair.gaf',
-    ]
-    goa_parser = GOAParser(goa_files)
