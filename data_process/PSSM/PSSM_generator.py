@@ -18,16 +18,16 @@ class PSSMGenerator:
             self.species = species
             if not os.path.exists(PSSMGenerator.temp_fasta_folder):
                 os.makedirs(PSSMGenerator.temp_fasta_folder)
-            pssm_folder = "./data/" + self.species + "/pssm/"
-            if not os.path.exists(pssm_folder):
-                os.makedirs(pssm_folder)
+            self.pssm_folder = "./data/pssm/" + species + "/"
+            if not os.path.exists(self.pssm_folder):
+                os.makedirs(self.pssm_folder)
     
 
     def fasta_file_path(self, record):
         return PSSMGenerator.temp_fasta_folder + record.id.split('|')[1]
 
     def pssm_file_path(self, record):
-        return "./data/" + self.species + "/pssm/" + record.id.split('|')[1] + ".pssm"
+        return self.pssm_folder + record.id.split('|')[1] + ".pssm"
 
     def _write_record_to_tmp_file(self,record):
         fasta_path = self.fasta_file_path(record)
@@ -103,7 +103,13 @@ class PSSMGenerator:
             for record in self.records:
                 pool.submit(self.process_with_record, record)
 
+def get_fasta_names_from_folder(folder):
+    return [name for name in os.listdir(folder) if name.endswith(".fasta")]
+
 
 if __name__ == "__main__":
-    pssm = PSSMGenerator("maize")
-    pssm.generate()
+    files = get_fasta_names_from_folder("./data/input")
+    for file in files:
+        print("processing " + file)
+        pssm_generator = PSSMGenerator(file.split(".")[0])
+        pssm_generator.generate()
