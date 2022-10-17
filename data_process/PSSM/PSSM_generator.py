@@ -95,17 +95,20 @@ class PSSMGenerator:
         assert statu == 0 , '生成PSSM文件失败,cmd命令有错'
     
     def process_with_record(self, record):
-        pssm_file_path = self.pssm_file_path(record)
-        if os.path.exists(pssm_file_path):
-            print("pssm file already exists: " + pssm_file_path)
-            return
         self._write_record_to_tmp_file(record)
         self._generatePSSMFile(record)
         self._delete_fasta_temp_file(record)
 
     def generate(self):
+        recordNeedProcess = []
+        for record in self.records:
+            pssm_file_path = self.pssm_file_path(record)
+            if os.path.exists(pssm_file_path):
+                print("pssm file already exists: " + pssm_file_path)
+            else:
+                recordNeedProcess.append(record)
         with ProcessPoolExecutor() as pool:
-            pool.map(self.process_with_record,self.records, chunksize=6)
+            pool.map(self.process_with_record,recordNeedProcess, chunksize=6)
 
 def get_fasta_names_from_folder(folder):
     return [name for name in os.listdir(folder) if name.endswith(".fasta")]
@@ -113,8 +116,7 @@ def get_fasta_names_from_folder(folder):
 
 if __name__ == "__main__":
     files = get_fasta_names_from_folder("./data/input")
-    file = files[0]
-    # for file in files:
-    print("processing " + file)
-    pssm_generator = PSSMGenerator(file.split(".")[0])
-    pssm_generator.generate()
+    for file in files:
+        print("processing " + file)
+        pssm_generator = PSSMGenerator(file.split(".")[0])
+        pssm_generator.generate()
