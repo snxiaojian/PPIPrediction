@@ -45,14 +45,3 @@ class BioGridParser(object):
                 # so we construct unweighted graph here
                 network[protein_a][protein_b] = network[protein_b][protein_a] = 1
         return network
-
-
-if __name__ == "__main__":
-    tab2_file = "./data/biogrid/BIOGRID-ALL-4.4.214.tab2.txt"
-    mapping_file = "./data/biogrid/UNIPROT.tab.txt"
-
-    # get PPI network
-    network = get_biogrid_network(tab2_file, mapping_file)
-    # write into file
-    with open(result_file, 'w') as fp:
-        json.dump(network, fp, indent=2)
