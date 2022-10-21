@@ -1,8 +1,10 @@
 import os
-import sys
 import numpy as np
 from Bio import SeqIO
 from concurrent.futures import ProcessPoolExecutor
+import sys
+sys.path.append("./")
+from data_process.util import get_fasta_names_from_folder, id_from_record
 
 class PSSMGenerator:
     temp_fasta_folder = "./data_process/PSSM/temp/"
@@ -24,10 +26,10 @@ class PSSMGenerator:
     
 
     def fasta_file_path(self, record):
-        return PSSMGenerator.temp_fasta_folder + record.id.split('|')[1]
+        return PSSMGenerator.temp_fasta_folder + id_from_record(record)
 
     def pssm_file_path(self, record):
-        return self.pssm_folder + record.id.split('|')[1] + ".pssm"
+        return self.pssm_folder + id_from_record(record) + ".pssm"
 
     def _write_record_to_tmp_file(self,record):
         fasta_path = self.fasta_file_path(record)
@@ -109,9 +111,6 @@ class PSSMGenerator:
                 recordNeedProcess.append(record)
         with ProcessPoolExecutor() as pool:
             pool.map(self.process_with_record,recordNeedProcess, chunksize=6)
-
-def get_fasta_names_from_folder(folder):
-    return [name for name in os.listdir(folder) if name.endswith(".fasta")]
 
 
 if __name__ == "__main__":

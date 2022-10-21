@@ -1,8 +1,8 @@
 import os
+import sys
 from Bio import SeqIO
-
-def get_fasta_names_from_folder(folder):
-    return [name for name in os.listdir(folder) if name.endswith(".fasta")]
+sys.path.append("./")
+from data_process.util import get_fasta_names_from_folder
 
 
 if __name__ == '__main__':

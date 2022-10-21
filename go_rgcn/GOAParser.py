@@ -4,8 +4,8 @@ import json
 
 class GOAParser:
     def __init__(self, goa_files):
-        self.anotation = {}
-        for goa_file in GOAParser.goa_files:
+        self.anotation = defaultdict(list)
+        for goa_file in goa_files:
             self.anotation.update(self.parse(goa_file))
  
     @staticmethod
