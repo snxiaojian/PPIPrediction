@@ -3,7 +3,7 @@ from Bio import SeqIO
 import sys
 
 sys.path.append("./")
-from data_process.util import get_fasta_names_from_folder, id_from_record
+from data_process.util import get_fasta_names_from_folder, id_from_record, gene_from_record
 from go_rgcn.GOAParser import GOAParser
 
 def data_is_complete(file, id):
@@ -25,8 +25,10 @@ if __name__ == "__main__":
         with open(fasta_folder + file, 'r') as f:
             for record in SeqIO.parse(f, "fasta"):
                 id = id_from_record(record)
-                has_anotation = len(anotation[id]) > 0
+                gene = gene_from_record(record)
+                has_anotation = len(anotation[id]) > 0 or len(anotation[gene]) > 0
                 if data_is_complete(file, id) and has_anotation:
                     species_records.append(record)
+
         with open(fasta_filtered_folder + file, 'w') as f:
             SeqIO.write(species_records, f, 'fasta')
