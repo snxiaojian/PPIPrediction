@@ -18,5 +18,5 @@ gsutil -m cp \
   "gs://public-datasets-deepmind-alphafold/proteomes/proteome-tax_id-9606-7_v3.tar" \
   "gs://public-datasets-deepmind-alphafold/proteomes/proteome-tax_id-9606-8_v3.tar" \
   "gs://public-datasets-deepmind-alphafold/proteomes/proteome-tax_id-9606-9_v3.tar" \
-./data/alphafoldDB/human
+./data/alphafolddb/human
 

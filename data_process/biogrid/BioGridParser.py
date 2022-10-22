@@ -14,7 +14,7 @@ class BioGridParser(object):
         taxon_set = {'9606','7227', '3702', '559292'}
         return BioGridParser(tab2_file, mapping_file, taxon_set).network
 
-    def biogrid2uniprot(file_path):
+    def biogrid2uniprot(self, file_path):
         mapping = dict()
         with open(file_path) as fp:
             for line in fp:

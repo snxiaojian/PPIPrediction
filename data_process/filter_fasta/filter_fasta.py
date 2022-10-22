@@ -8,7 +8,7 @@ from go_rgcn.GOAParser import GOAParser
 
 def data_is_complete(file, id):
     species = file.split(".")[0]
-    contact_map_file = "./data/alphafoldDB/" + species + "/" + "AF-" + id + "-F1-model_v3.cif"
+    contact_map_file = "./data/alphafolddb/" + species + "/" + "AF-" + id + "-F1-model_v3.cif"
     pssm_file = "./data/pssm/" + species + "/" + id + ".pssm"
     contact_map_exist = os.path.exists(contact_map_file)
     pssm_exist = os.path.exists(pssm_file) 
@@ -18,7 +18,7 @@ if __name__ == "__main__":
     fasta_folder = "./data/input/"
     fasta_filtered_folder = "./data/filtered_input/"
     files = get_fasta_names_from_folder(fasta_folder)
-    anotation = GOAParser.parsed_annotation()
+    anotations = GOAParser.parsed_annotation()
     for file in files:
         print("filtering " + file)
         species_records = []
@@ -26,7 +26,7 @@ if __name__ == "__main__":
             for record in SeqIO.parse(f, "fasta"):
                 id = id_from_record(record)
                 gene = gene_from_record(record)
-                has_anotation = len(anotation[id]) > 0 or len(anotation[gene]) > 0
+                has_anotation = id in anotations or gene in anotations
                 if data_is_complete(file, id) and has_anotation:
                     species_records.append(record)
 

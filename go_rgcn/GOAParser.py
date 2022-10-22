@@ -4,10 +4,10 @@ import json
 
 class GOAParser:
     def __init__(self, goa_files):
-        self.anotation = defaultdict(list)
+        self.annotations = {}
         for goa_file in goa_files:
-            self.anotation.update(self.parse(goa_file))
- 
+            self.annotations.update(self.parse(goa_file))
+
     @staticmethod
     def parsed_annotation():
         goa_files: list = [
@@ -16,10 +16,10 @@ class GOAParser:
             './data/go/sgd.gaf',
             './data/go/tair.gaf',
         ]
-        return GOAParser(goa_files).anotation
+        return GOAParser(goa_files).annotations
 
     def parse(self, file: str):
-        annotation = defaultdict(list)
+        annotations = defaultdict(list)
         with open(file, 'rt') as fp:
             for line in fp:
                 if line.startswith('!'):
@@ -29,5 +29,5 @@ class GOAParser:
                 if "NOT" not in qualifier:
                     key = entries[2]
                     go_term = entries[4]
-                    annotation[key].append(go_term)
-        return annotation
+                    annotations[key].append(go_term)
+        return annotations
