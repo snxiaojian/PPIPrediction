@@ -1,4 +1,4 @@
 from https://pytorch.org/ 
 conda install pytorch torchvision torchaudio cudatoolkit=11.6 -c pytorch -c conda-forge
-from https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html
-pip install torch-scatter torch-sparse torch-cluster torch-spline-conv torch-geometric -f https://data.pyg.org/whl/torch-1.12.0+cu116.html
+from https://www.dgl.ai/pages/start.html
+conda install -c dglteam dgl-cuda11.6

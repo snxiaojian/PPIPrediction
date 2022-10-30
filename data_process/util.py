@@ -10,3 +10,14 @@ def gene_from_record(record):
     if record.description.find("GN=") == -1:
         return id_from_record(record)
     return record.description.split('GN=')[1].split(" ")[0]
+
+def records_from_filtered_input():
+    fasta_filtered_folder = "./data/filtered_input/"
+    records = {}
+    species_dict = {}
+    for file in get_fasta_names_from_folder(fasta_filtered_folder):
+        species = file.split(".")[0]
+        for record in SeqIO.parse(fasta_filtered_folder + file, "fasta"):
+            records[id_from_record(record)] = record
+            species_dict[id_from_record(record)] = species
+    return records, species_dict

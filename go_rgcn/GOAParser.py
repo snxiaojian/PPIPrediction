@@ -29,5 +29,6 @@ class GOAParser:
                 if "NOT" not in qualifier:
                     key = entries[2]
                     go_term = entries[4]
-                    annotations[key].append(go_term)
+                    if go_term not in annotations[key]:
+                        annotations[key].append(go_term)
         return annotations

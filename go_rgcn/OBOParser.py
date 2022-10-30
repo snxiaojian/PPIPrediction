@@ -1,12 +1,3 @@
-
-# Copyright 2010-2016 by Haibao Tang et al. All rights reserved.
-#
-# This code is part of the goatools distribution and goverend by its
-# license. Please see the LICENSE file included with goatools.
-
-
-"""Read and store Gene Ontology's obo file."""
-
 from __future__ import print_function
 from collections import defaultdict
 import sys
@@ -14,31 +5,18 @@ import os
 import re
 
 class OBOReader(object):
-    """Read goatools.org's obo file. Load into this iterable class.
-
-        Download obo from: http://geneontology.org/ontology/go-basic.obo
-
-        >>> reader = OBOReader()
-        >>> for rec in reader:
-                print(rec)
-    """
-
     def __init__(self, obo_file="go-basic.obo", optional_attrs=None):
         """Read obo file. Load dictionary."""
         self._init_optional_attrs(optional_attrs)
-        self.format_version = None # e.g., "1.2" of "format-version:" line
-        self.data_version = None # e.g., "releases/2016-07-07" from "data-version:" line
+        self.format_version = None
+        self.data_version = None
         self.typedefs = {}
 
-        # True if obo file exists or if a link to an obo file exists.
         if os.path.isfile(obo_file):
             self.obo_file = obo_file
             # GOTerm attributes that are necessary for any operations:
         else:
-            raise Exception("COULD NOT READ({OBO})\n"
-                            "download obo file first\n "
-                            "[http://geneontology.org/ontology/"
-                            "go-basic.obo]".format(OBO=obo_file))
+            raise Exception("obo file not exist: {F}".format(F=obo_file))
 
     def __iter__(self):
         """Return one GO Term record at a time from an obo file."""
@@ -99,7 +77,6 @@ class OBOReader(object):
 
     def _add_to_ref(self, rec_curr, line, lnum):
         """Add new fields to the current reference."""
-        # Written by DV Klopfenstein
         # Examples of record lines containing ':' include:
         #   id: GO:0000002
         #   name: mitochondrial genome maintenance
@@ -200,7 +177,6 @@ class OBOReader(object):
               comment consider def is_class_level is_metadata_tag is_transitive
               relationship replaced_by subset synonym transitive_over xref
         """
-        # Written by DV Klopfenstein
         # Required attributes are always loaded. All others are optionally loaded.
         self.attrs_req = ['id', 'alt_id', 'name', 'namespace', 'is_a', 'is_obsolete']
         self.attrs_scalar = ['comment', 'defn',
