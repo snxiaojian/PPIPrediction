@@ -4,33 +4,37 @@ import dgl
 import scipy.sparse as spp
 import numpy
 import torch
-from ResidueFeatureLoader import ResidueFeatureLoader
+
 sys.path.append("./")
 from go_rgcn.GOAParser import GOAParser
-from go_rgcn.GOGraphInfoProvider import GOGraphInfoProvider
+from ppi_network.ResidueFeatureLoader import ResidueFeatureLoader
 from data_process.util import records_from_filtered_input, gene_from_record
-from data_process.PSSM.PSSM_generator import PSSMGenerator
+from data_process.pssm.PSSMGenerator import PSSMGenerator
 
 device = torch.device('cuda')
 class ProteinFeatureLoader:
-    anotations = GOAParser.parsed_annotation()
-    records, species_dict = records_from_filtered_input()
-    residue_feature_loader = ResidueFeatureLoader()
-    go_graph_info_provider = GOGraphInfoProvider()
-    go_graph = dgl.heterograph(go_graph_info_provider.graph_dict)
+    def __init__(self):
+        self.anotations = GOAParser.parsed_annotation()
+        self.records, self.species_dict = records_from_filtered_input()
+        self.residue_feature_loader = ResidueFeatureLoader()
+        self.all_embedding_dict = self.load_embedding_dict()
     
-    @staticmethod
-    def default_loader(pid):
-        record = ProteinFeatureLoader.records[pid]
+    def load_embedding_dict(self):
+        embedding_dict = numpy.load("./data/go/go_embeddings.npy", allow_pickle=True)
+        for idx, j in numpy.ndenumerate(embedding_dict):
+            return j
+    
+    def default_loader(self, pid):
+        record = self.records[pid]
         gene = gene_from_record(record)
-        species = ProteinFeatureLoader.species_dict[pid]
+        species = self.species_dict[pid]
         if record is None:
             raise ValueError("No record for %s" % pid)
-        if pid in ProteinFeatureLoader.anotations:
-            go_id = ProteinFeatureLoader.anotations[pid]
-        if gene in ProteinFeatureLoader.anotations:
-            go_id = ProteinFeatureLoader.anotations[gene]
-        if go_id is None:
+        if pid in self.anotations:
+            go_ids = self.anotations[pid]
+        if gene in self.anotations:
+            go_ids = self.anotations[gene]
+        if go_ids is None:
             raise ValueError("No anotation for %s" % pid)
         
         pssm_file = "./data/pssm/" + species + "/" + pid + ".pssm"
@@ -46,21 +50,26 @@ class ProteinFeatureLoader:
         if not os.path.exists(contact_map_file):
             raise ValueError("No contact map for %s" % pid)
         # residue graph
-        residue_feature = ProteinFeatureLoader.residue_feature_loader.load_residue_feature(record)
+        residue_feature = self.residue_feature_loader.load_residue_feature(record)
         residue_feature = torch.Tensor(residue_feature).to(device)
         adj_residue = spp.coo_matrix(contact_map)
         G_residue = dgl.from_scipy(adj_residue, device=device)
         G_residue.ndata['feat'] = residue_feature
-        # go graph
-        go_indexes = ProteinFeatureLoader.go_graph_info_provider.layer_related_indexes_for_ids(go_id)
-
-        go_indexes = torch.tensor(go_indexes, dtype=torch.int64)
-        G_go = ProteinFeatureLoader.go_graph.subgraph(go_indexes, relabel_nodes=True)
-        G_go = G_go.to(device)
-        pssm_feature = PSSMGenerator.readFromPSSM(pssm_file)
-        pssm_feature = torch.from_numpy(pssm_feature).to(device)
-        return G_residue, G_go, pssm_feature
-        
+        # go embedding
+        embedding_dict = numpy.load("./data/go/go_embeddings.npy", allow_pickle=True)
+        for idx, j in numpy.ndenumerate(embedding_dict):
+            embedding_dict = j
+        go_embedding = []
+        for go_id in go_ids:
+            if go_id in embedding_dict:
+                e = embedding_dict[go_id]
+                go_embedding.append(e)
+        go_embedding = torch.Tensor(go_embedding).to(device)
+        go_embedding = torch.sum(go_embedding, dim=0)
+        # pssm feature
+        pssm = PSSMGenerator.readFromPSSM(pssm_file)
+        pssm = torch.from_numpy(pssm).to(device)
+        return G_residue, go_embedding, pssm
 
 if __name__ == "__main__":
     ProteinFeatureLoader.default_loader("A0A0A7EPL0")

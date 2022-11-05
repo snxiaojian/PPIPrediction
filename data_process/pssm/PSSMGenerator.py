@@ -82,7 +82,7 @@ class PSSMGenerator:
                     pssm_np = np.vstack( [pssm_np , PSSMGenerator.get_line_numpy( line ,10,69,3)] )
                     line = f.readline()
             f.close()
-        return pssm_np  
+        return pssm_np.tolist()
 
     def _generatePSSMFile(self,record):
         '''

@@ -2,3 +2,5 @@ from https://pytorch.org/
 conda install pytorch torchvision torchaudio cudatoolkit=11.6 -c pytorch -c conda-forge
 from https://www.dgl.ai/pages/start.html
 conda install -c dglteam dgl-cuda11.6
+
+conda install tensorflow
