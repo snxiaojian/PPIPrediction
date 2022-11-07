@@ -114,13 +114,10 @@ def convert_cif_to_npz(para_list):
     species = para_list[4]
 
     npz_file = output_folder + pdb_id + '.npz'
-    if os.path.exists(npz_file):
-        print('skipping ' + species + " :" + index)
-    else:
-        contact_map = calc_cif_contact_map(pdb_path, pdb_id, 'A')
-        
-        np.savez(npz_file, contact=contact_map)
-        print(species + ":" + index)
+
+    contact_map = calc_cif_contact_map(pdb_path, pdb_id, 'A')
+    np.savez(npz_file, contact=contact_map)
+    print(species + ":" + index)
 
 def get_subfolder_from_folder(folder):
     return [name for name in os.listdir(folder) if os.path.isdir(folder + name)]
@@ -133,7 +130,7 @@ def parsealphaFoldIDFromFile(filename):
 
 def main():
     para_list = []
-    alphafold_path = "./data/alphafoldDB/"
+    alphafold_path = "./data/alphafolddb/"
     folders = get_subfolder_from_folder(alphafold_path)
     for name in folders:
         output_folder = 'data/contact_map/' + name + '/'
@@ -144,7 +141,11 @@ def main():
         for j, filename in enumerate(filenames):
             pdb_id = parsealphaFoldIDFromFile(filename)
             para = [pdb_id, species_alphafold_path, output_folder, str(j), name]
-            para_list.append(para)
+            npz_file = output_folder + pdb_id + '.npz'
+            if os.path.exists(npz_file):
+                print('skipping ' + name + " :" + str(j))
+            else:
+                para_list.append(para)
     
     with ProcessPoolExecutor() as pool:
         pool.map(convert_cif_to_npz,para_list, chunksize=6)

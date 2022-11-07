@@ -17,31 +17,19 @@ def predicting(model, loader):
     total_labels = torch.Tensor()
     print('Make prediction for {} samples...'.format(len(loader.dataset)))
     with torch.no_grad():
-        for batch_idx,(G1,dmap1,G2,dmap2,y) in enumerate(loader):
-            pad_dmap1 = pad_dmap(dmap1)
-            pad_dmap2 = pad_dmap(dmap2)  
-            output = model(dgl.batch(G1),pad_dmap1,dgl.batch(G2),pad_dmap2)
-            output = torch.round(output.squeeze(1))
+        for batch_idx,(G_residue,go_feature, pssm, indexes ,G_residue2, go_feature2,pssm2, indexes2, y) in enumerate(loader):
+            output = model(dgl.batch(G_residue), toTensor(go_feature), toTensor(pssm), toTensor(indexes),
+                               dgl.batch(G_residue2), toTensor(go_feature2), toTensor(pssm2), toTensor(indexes2))
+            output = torch.round(output)
             total_preds = torch.cat((total_preds.cpu(), output.cpu()), 0)
             total_labels = torch.cat((total_labels.cpu(), y.float().cpu()), 0)
             
     return total_labels.numpy().flatten(),total_preds.numpy().flatten()
 
-def pad_pssm(dmaplist):
-    # batch_size = len(dmaplist)
-    # shape0 = dmaplist[0].shape[0]
-    # shape1 = dmaplist[0].shape[1]
-    # b = torch.Tensor(batch_size, shape0, shape1).to(device)
-    # tensors = torch.stack(dmaplist, out=b)
-    return torch.tensor(0).to(device)
-
-def pad_go_feature(dmaplist):
-    batch_size = len(dmaplist)
-    shape0 = dmaplist[0].shape[0]
-    b = torch.Tensor(batch_size, shape0).to(device)
-    tensors = torch.stack(dmaplist, out=b)
-    return tensors.unsqueeze(1)
-
+def toTensor(list_of_tensors):
+    tensor_of_tensors = torch.stack((list_of_tensors))
+    return tensor_of_tensors.to(device)
+    
 def train():
 
     train_losses = []
@@ -49,19 +37,19 @@ def train():
     
     train_dataset = PPIDataset(type='train')
     train_loader = DataLoader(dataset=train_dataset,
-               batch_size=12,
-               shuffle=False,
+               batch_size=100,
+               shuffle=True,
                drop_last=False,
                collate_fn=collate)
     
     test_dataset = PPIDataset(type='test')
     test_loader = DataLoader(dataset=test_dataset,
-               batch_size=12,
-               shuffle=False,
+               batch_size=100,
+               shuffle=True,
                drop_last=False,
                collate_fn=collate)
     
-    model = GPSSPPIModel()
+    model = GPSSPPIModel().to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     criterion = torch.nn.BCELoss()
     
@@ -71,10 +59,13 @@ def train():
         correct = 0
 
         with tqdm(train_loader, unit="batch") as tepoch:
-            for G_residue,go_feature, pssm ,G_residue2, go_feature2 ,pssm2 ,y in tepoch:
+            for G_residue,go_feature, pssm, indexes ,G_residue2, go_feature2,pssm2, indexes2, y in tepoch:
                 tepoch.set_description(f"Epoch {epoch}")
-                y_pred = model(dgl.batch(G_residue),pad_go_feature(go_feature), pad_pssm(pssm), dgl.batch(G_residue),pad_go_feature(go_feature), pad_pssm(pssm))
+                y_pred = model(dgl.batch(G_residue), toTensor(go_feature), toTensor(pssm), toTensor(indexes),
+                               dgl.batch(G_residue2), toTensor(go_feature2), toTensor(pssm2), toTensor(indexes2))
                 y_pred = y_pred.type(torch.DoubleTensor)
+                y = y.unsqueeze(1)
+                correct += torch.eq(torch.round(y_pred),y).data.sum()
                 loss = criterion(y_pred,y)
                 total_loss+=loss.data
                 optimizer.zero_grad()
@@ -84,7 +75,7 @@ def train():
                 tepoch.set_postfix(loss=loss.item())
                 
         avg_loss = total_loss/n_batches
-        acc = correct.numpy()/(len(train_loader.dataset))
+        acc = correct/(len(train_loader.dataset))
         
         train_losses.append(avg_loss)
         train_accs.append(acc)

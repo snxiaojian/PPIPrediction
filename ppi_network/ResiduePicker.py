@@ -28,7 +28,7 @@ class ResiduePicker:
         self.pssm = pssm
         
     def pick_residue(self, number: int):
-        indexes = [0] * number
+        indexes = [-1] * number
         if len(self.sequence) <= number:
             for i in range(len(self.sequence)):
                 indexes[i] = 1

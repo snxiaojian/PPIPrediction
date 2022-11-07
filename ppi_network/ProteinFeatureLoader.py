@@ -10,6 +10,7 @@ from go_rgcn.GOAParser import GOAParser
 from ppi_network.ResidueFeatureLoader import ResidueFeatureLoader
 from data_process.util import records_from_filtered_input, gene_from_record
 from data_process.pssm.PSSMGenerator import PSSMGenerator
+from ppi_network.ResiduePicker import ResiduePicker
 
 device = torch.device('cuda')
 class ProteinFeatureLoader:
@@ -18,6 +19,7 @@ class ProteinFeatureLoader:
         self.records, self.species_dict = records_from_filtered_input()
         self.residue_feature_loader = ResidueFeatureLoader()
         self.all_embedding_dict = self.load_embedding_dict()
+        self.pick_number = 50
     
     def load_embedding_dict(self):
         embedding_dict = numpy.load("./data/go/go_embeddings.npy", allow_pickle=True)
@@ -49,6 +51,9 @@ class ProteinFeatureLoader:
 
         if not os.path.exists(contact_map_file):
             raise ValueError("No contact map for %s" % pid)
+        
+        lenth_of_protein = len(record.seq._data)
+        
         # residue graph
         residue_feature = self.residue_feature_loader.load_residue_feature(record)
         residue_feature = torch.Tensor(residue_feature).to(device)
@@ -56,20 +61,34 @@ class ProteinFeatureLoader:
         G_residue = dgl.from_scipy(adj_residue, device=device)
         G_residue.ndata['feat'] = residue_feature
         # go embedding
-        embedding_dict = numpy.load("./data/go/go_embeddings.npy", allow_pickle=True)
-        for idx, j in numpy.ndenumerate(embedding_dict):
-            embedding_dict = j
         go_embedding = []
         for go_id in go_ids:
-            if go_id in embedding_dict:
-                e = embedding_dict[go_id]
+            if go_id in self.all_embedding_dict:
+                e = self.all_embedding_dict[go_id].tolist()
                 go_embedding.append(e)
         go_embedding = torch.Tensor(go_embedding).to(device)
         go_embedding = torch.sum(go_embedding, dim=0)
         # pssm feature
         pssm = PSSMGenerator.readFromPSSM(pssm_file)
-        pssm = torch.from_numpy(pssm).to(device)
-        return G_residue, go_embedding, pssm
+        
+        
+        # pick 50 residues
+        indexes = ResiduePicker(record=record, pssm=pssm).pick_residue(number=self.pick_number)
+        # last index add length of protein
+        indexes.append(lenth_of_protein)
+        
+        picked_pssm = []
+        for index in range(self.pick_number):
+            if index == -1:
+                picked_pssm.append([0] * 20)
+            elif index < lenth_of_protein:
+                picked_pssm.append(pssm[index])
+            else:
+                picked_pssm.append([0] * 20)
+        picked_pssm = torch.Tensor(picked_pssm).to(device)
+        indexes = torch.Tensor(indexes).to(device)
+        
+        return G_residue, go_embedding, picked_pssm, indexes
 
 if __name__ == "__main__":
-    ProteinFeatureLoader.default_loader("A0A0A7EPL0")
+    ProteinFeatureLoader().default_loader("P47756")
