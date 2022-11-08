@@ -107,8 +107,14 @@ if __name__ == "__main__":
     train_negative_ppi = negative_ppi[:int(len(negative_ppi)*train_test_ratio)]
     test_positive_ppi = positive_ppi[int(len(positive_ppi)*train_test_ratio):]
     test_negative_ppi = negative_ppi[int(len(negative_ppi)*train_test_ratio):]
-    write_ppi_to_tsv(train_positive_ppi+train_negative_ppi, "train")
-    write_ppi_to_tsv(test_positive_ppi+test_negative_ppi, "test")
+    
+    train_dataset = train_positive_ppi + train_negative_ppi
+    test_dataset = test_positive_ppi + test_negative_ppi
+    random.shuffle(train_dataset)
+    random.shuffle(test_dataset)
+    
+    write_ppi_to_tsv(train_dataset, "train")
+    write_ppi_to_tsv(test_dataset, "test")
 
     
     

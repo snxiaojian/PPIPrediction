@@ -1,3 +1,5 @@
+import os
+os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
 import torch
 from torch.utils.data import DataLoader
 from tqdm import tqdm
@@ -37,14 +39,14 @@ def train():
     
     train_dataset = PPIDataset(type='train')
     train_loader = DataLoader(dataset=train_dataset,
-               batch_size=400,
+               batch_size=100,
                shuffle=True,
                drop_last=False,
                collate_fn=collate)
     
     test_dataset = PPIDataset(type='test')
     test_loader = DataLoader(dataset=test_dataset,
-               batch_size=400,
+               batch_size=100,
                shuffle=True,
                drop_last=False,
                collate_fn=collate)

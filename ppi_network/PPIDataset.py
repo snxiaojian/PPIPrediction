@@ -31,4 +31,4 @@ class PPIDataset(Dataset):
         return G_residue, go_embedding, pssm, indexes, G_residue2, go_embedding2, pssm2, indexes2, label
 
     def __len__(self):
-        return len(self.ppi_items)
+        return 4000

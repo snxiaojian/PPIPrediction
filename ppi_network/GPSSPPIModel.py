@@ -44,7 +44,7 @@ class GPSSPPIModel(torch.nn.Module):
         # protein1
         graph_feature, go_feature = self.forward_part(G_residue, go_embedding, indexes, pssm)
         graph_feature2, go_feature2 = self.forward_part(G_residue2, go_embedding2, indexes2, pssm2)
-        if random.randint(0,1):
+        if bool(random.getrandbits(1)):
             feature = torch.cat((graph_feature2, go_feature2, graph_feature, go_feature), dim=1)
         else:
             feature = torch.cat((graph_feature, go_feature, graph_feature2, go_feature2), dim=1)
@@ -82,7 +82,7 @@ class GPSSPPIModel(torch.nn.Module):
         residue_feature = torch.cat((selected_feature, pssm.reshape(-1, self.pssm_size)), dim=1)
         
         g_feature = self.relu(self.fc_g1(residue_feature))
-        g_feature = g_feature.reshape(batch_size, -1
+        g_feature = g_feature.reshape(batch_size, -1)
         g_feature = self.relu(self.fc_g2(g_feature))
         g_feature = self.relu(self.fc_g3(g_feature))
 
