@@ -1,12 +1,14 @@
 from __future__ import annotations
 from collections import defaultdict
+from Bio import SeqIO
+import random
+import csv
+import os
+import math
 import sys
 sys.path.append("./")
 from data_process.util import get_fasta_names_from_folder, id_from_record
 from data_process.biogrid.BioGridParser import BioGridParser
-from Bio import SeqIO
-import random
-import csv
 
 def recordIDs_for_file(file):
     fasta_file = "./data/filtered_input/" + file
@@ -17,10 +19,6 @@ def recordIDs_for_file(file):
     return recordIDs
 
 def generate_ppi(ratio, biogrid_network, recordIDs):
-    num = 0
-    for key, dict in biogrid_network.items():
-        num += len(dict)
-    print(num)
     positive_ppi_item = []
     mutual_ppi_dict = defaultdict(dict)
     for ppi1, ppi2dict in biogrid_network.items():
@@ -31,7 +29,7 @@ def generate_ppi(ratio, biogrid_network, recordIDs):
                 positive_ppi_item.append([ppi1, ppi2, 1])
                 mutual_ppi_dict[ppi1][ppi2] = 1
                 mutual_ppi_dict[ppi2][ppi1] = 1
-                if len(positive_ppi_item) % 1000 == 0:
+                if len(positive_ppi_item) % 10000 == 0:
                     print("generating positive ppi index: " + str(len(positive_ppi_item)))
     negative_ppi_count = int(len(positive_ppi_item) * ratio)
     negative_ppi_item = []
@@ -47,22 +45,18 @@ def generate_ppi(ratio, biogrid_network, recordIDs):
         negative_ppi_item.append([ppi1, ppi2, 0])
         mutual_ppi_dict[ppi1][ppi2] = 0
         mutual_ppi_dict[ppi2][ppi1] = 0
-        if index % 1000 == 0:
+        if index % 10000 == 0:
             print("generating negative ppi index: " + str(index))
     return positive_ppi_item, negative_ppi_item
     
 
-def safe_ratio_for_species(species):
-    if species == "human":
-        return 7
-    elif species == "fly":
-        return 5
-    elif species == "yeast":
-        return 0.1
-    elif species == "arabidopsis":
-        return 40
-    else:
+def negative_ratio_for_species(species, ppi_count):
+    file = "./data/input/" + species + ".fasta"
+    if not os.path.exists(file):
         raise ValueError("Species not supported")
+    protein_num = len([1 for line in open(file) if line.startswith(">")])
+    negative_ppi_ratio =  math.pow(protein_num, 2) / (ppi_count * 2 * 1000 * 3)
+    return math.floor(negative_ppi_ratio)
 
 def write_ppi_to_tsv(ppi_items, type):
     file = "./data/dataset/" + type + "_ppi.tsv"
@@ -71,33 +65,48 @@ def write_ppi_to_tsv(ppi_items, type):
         writer.writerows(ppi_items)
         print("appending to " + type + ".tsv")
 
+def write_infomation_to_file(information, file):
+    with open(file, 'w') as f:
+        f.writelines(information)
+        print("appending to " + file)
+
 if __name__ == "__main__":
     files = get_fasta_names_from_folder("./data/filtered_input")
     positive_ppi = []
     negative_ppi = []
-    whole_biogrid_network = BioGridParser.parsed_network()
+    informations = []
     for file in files:
-        if file == "human.fasta":
-            continue
         print("processing " + file)
         species = file.split(".")[0]
-        ratio = safe_ratio_for_species(species)
+        biogrid_network, ppi_count = BioGridParser.parsed_network(species=species)
+        information = "total biogrid: " + species + " ppi count: " + str(ppi_count)
+        print(information)
+        informations.append(information)
+        
+        ratio = negative_ratio_for_species(species, ppi_count)
+        information = "negative ratio for " + species + ": " + str(ratio)
+        print(information)
+        informations.append(information)
         recordIDs = recordIDs_for_file(file)
 
-        intersection_record_ids = []
-        keys = set(whole_biogrid_network.keys()) & set(recordIDs)
-        biogrid_network = {k: whole_biogrid_network[k] for k in keys}
         positive_ppi_in_species, negative_ppi_in_species = generate_ppi(ratio, biogrid_network, recordIDs)
+        information = "positive ppi count for " + species + ": " + str(len(positive_ppi_in_species))
+        print(information)
+        informations.append(information)
+        information = "negative ppi count for " + species + ": " + str(len(negative_ppi_in_species))
+        print(information)
+        informations.append(information)
         positive_ppi.extend(positive_ppi_in_species)
         negative_ppi.extend(negative_ppi_in_species)
     write_ppi_to_tsv(positive_ppi+negative_ppi, "whole")
-    ratio = 0.8
+    write_infomation_to_file(informations, "./data/dataset/information.txt")
+    train_test_ratio = 0.8
     random.shuffle(positive_ppi)
     random.shuffle(negative_ppi)
-    train_positive_ppi = positive_ppi[:int(len(positive_ppi)*ratio)]
-    train_negative_ppi = negative_ppi[:int(len(negative_ppi)*ratio)]
-    test_positive_ppi = positive_ppi[int(len(positive_ppi)*ratio):]
-    test_negative_ppi = negative_ppi[int(len(negative_ppi)*ratio):]
+    train_positive_ppi = positive_ppi[:int(len(positive_ppi)*train_test_ratio)]
+    train_negative_ppi = negative_ppi[:int(len(negative_ppi)*train_test_ratio)]
+    test_positive_ppi = positive_ppi[int(len(positive_ppi)*train_test_ratio):]
+    test_negative_ppi = negative_ppi[int(len(negative_ppi)*train_test_ratio):]
     write_ppi_to_tsv(train_positive_ppi+train_negative_ppi, "train")
     write_ppi_to_tsv(test_positive_ppi+test_negative_ppi, "test")
 

@@ -11,6 +11,14 @@
             "program": "./train.py",
             "console": "integratedTerminal",
             "justMyCode": true
+        },
+        {
+            "name": "dataset_generate",
+            "type": "python",
+            "request": "launch",
+            "program": "./data_process/dataset/dataset_generate.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
         }
     ]
 }
