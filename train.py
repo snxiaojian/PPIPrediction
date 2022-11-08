@@ -37,14 +37,14 @@ def train():
     
     train_dataset = PPIDataset(type='train')
     train_loader = DataLoader(dataset=train_dataset,
-               batch_size=100,
+               batch_size=400,
                shuffle=True,
                drop_last=False,
                collate_fn=collate)
     
     test_dataset = PPIDataset(type='test')
     test_loader = DataLoader(dataset=test_dataset,
-               batch_size=100,
+               batch_size=400,
                shuffle=True,
                drop_last=False,
                collate_fn=collate)
@@ -63,8 +63,7 @@ def train():
                 tepoch.set_description(f"Epoch {epoch}")
                 y_pred = model(dgl.batch(G_residue), toTensor(go_feature), toTensor(pssm), toTensor(indexes),
                                dgl.batch(G_residue2), toTensor(go_feature2), toTensor(pssm2), toTensor(indexes2))
-                y_pred = y_pred.type(torch.DoubleTensor)
-                y = y.unsqueeze(1)
+                y = y.unsqueeze(1).to(device)
                 correct += torch.eq(torch.round(y_pred),y).data.sum()
                 loss = criterion(y_pred,y)
                 total_loss+=loss.data

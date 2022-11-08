@@ -79,21 +79,21 @@ if __name__ == "__main__":
         print("processing " + file)
         species = file.split(".")[0]
         biogrid_network, ppi_count = BioGridParser.parsed_network(species=species)
-        information = "total biogrid: " + species + " ppi count: " + str(ppi_count)
+        information = "total biogrid: " + species + " ppi count: " + str(ppi_count) + "\n"
         print(information)
         informations.append(information)
         
         ratio = negative_ratio_for_species(species, ppi_count)
-        information = "negative ratio for " + species + ": " + str(ratio)
+        information = "negative ratio for " + species + ": " + str(ratio) + "\n"
         print(information)
         informations.append(information)
         recordIDs = recordIDs_for_file(file)
 
         positive_ppi_in_species, negative_ppi_in_species = generate_ppi(ratio, biogrid_network, recordIDs)
-        information = "positive ppi count for " + species + ": " + str(len(positive_ppi_in_species))
+        information = "positive ppi count for " + species + ": " + str(len(positive_ppi_in_species)) + "\n"
         print(information)
         informations.append(information)
-        information = "negative ppi count for " + species + ": " + str(len(negative_ppi_in_species))
+        information = "negative ppi count for " + species + ": " + str(len(negative_ppi_in_species)) + "\n"
         print(information)
         informations.append(information)
         positive_ppi.extend(positive_ppi_in_species)

@@ -2,6 +2,7 @@ import torch
 from dgl.nn import GATConv
 from dgl.nn.pytorch.glob import MaxPooling
 import torch.nn.functional as F
+import random
 
 class GPSSPPIModel(torch.nn.Module):
 
@@ -43,7 +44,10 @@ class GPSSPPIModel(torch.nn.Module):
         # protein1
         graph_feature, go_feature = self.forward_part(G_residue, go_embedding, indexes, pssm)
         graph_feature2, go_feature2 = self.forward_part(G_residue2, go_embedding2, indexes2, pssm2)
-        feature = torch.cat((graph_feature, go_feature, graph_feature2, go_feature2), dim=1)
+        if random.randint(0,1):
+            feature = torch.cat((graph_feature2, go_feature2, graph_feature, go_feature), dim=1)
+        else:
+            feature = torch.cat((graph_feature, go_feature, graph_feature2, go_feature2), dim=1)
         
         x = self.fc1(feature)
         x = self.relu(x)
@@ -61,9 +65,12 @@ class GPSSPPIModel(torch.nn.Module):
         split = torch.split(indexes, [self.pick_num,1], dim=1)
         indexes = split[0]
         protein_length = torch.squeeze(split[1])
-        indexes_in_batch = torch.cat((torch.zeros(1).to(device), torch.cumsum(protein_length, dim=0)[:-1]), dim=0)
+        indexes_in_batch =  torch.cumsum(protein_length, dim=0)
+        indexes_in_batch = torch.roll(indexes_in_batch, shifts=1, dims=0)
+        indexes_in_batch[0] = 0
         indexes_in_batch = indexes_in_batch.unsqueeze(1)
         indexes_in_batch = torch.add(indexes, indexes_in_batch).reshape(-1).type(torch.IntTensor).to(device)
+        
         g_feature = self.relu(self.gcn1(G_residue,G_residue.ndata['feat']))
         g_feature = g_feature.reshape(-1,self.g_embedding_size)
         g_feature = self.relu(self.gcn2(G_residue, g_feature))
@@ -75,12 +82,10 @@ class GPSSPPIModel(torch.nn.Module):
         residue_feature = torch.cat((selected_feature, pssm.reshape(-1, self.pssm_size)), dim=1)
         
         g_feature = self.relu(self.fc_g1(residue_feature))
-        g_feature = g_feature.reshape(batch_size, -1)
-        
+        g_feature = g_feature.reshape(batch_size, -1
         g_feature = self.relu(self.fc_g2(g_feature))
-        
         g_feature = self.relu(self.fc_g3(g_feature))
-        
+
         go_embedding = self.relu(self.fc_go_embedding(go_embedding))
 
         return g_feature, go_embedding

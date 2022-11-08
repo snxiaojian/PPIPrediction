@@ -7,7 +7,7 @@ from ppi_network.ProteinFeatureLoader import ProteinFeatureLoader
 
 def collate(samples):
     G_residue, go_embedding, pssm, indexes, G_residue2, go_embedding2, pssm2, indexes2, labels = map(list, zip(*samples))
-    return G_residue, go_embedding, pssm, indexes, G_residue2, go_embedding2, pssm2, indexes2, torch.DoubleTensor(labels)        
+    return G_residue, go_embedding, pssm, indexes, G_residue2, go_embedding2, pssm2, indexes2, torch.FloatTensor(labels)        
 
 class PPIDataset(Dataset):
     def __init__(self,type):
