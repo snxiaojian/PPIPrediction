@@ -12,14 +12,15 @@ from data_process.util import records_from_filtered_input, gene_from_record
 from data_process.pssm.PSSMGenerator import PSSMGenerator
 from ppi_network.ResiduePicker import ResiduePicker
 
-device = torch.device('cuda')
+
 class ProteinFeatureLoader:
-    def __init__(self):
+    def __init__(self, pick_num, device):
+        self.device = device
         self.anotations = GOAParser.parsed_annotation()
         self.records, self.species_dict = records_from_filtered_input()
         self.residue_feature_loader = ResidueFeatureLoader()
         self.all_embedding_dict = self.load_embedding_dict()
-        self.pick_number = 50
+        self.pick_number = pick_num
     
     def load_embedding_dict(self):
         embedding_dict = numpy.load("./data/go/go_embeddings.npy", allow_pickle=True)
@@ -56,9 +57,9 @@ class ProteinFeatureLoader:
         
         # residue graph
         residue_feature = self.residue_feature_loader.load_residue_feature(record)
-        residue_feature = torch.Tensor(residue_feature).to(device)
+        residue_feature = torch.Tensor(residue_feature).to(self.device)
         adj_residue = spp.coo_matrix(contact_map)
-        G_residue = dgl.from_scipy(adj_residue, device=device)
+        G_residue = dgl.from_scipy(adj_residue, device=self.device)
         G_residue.ndata['feat'] = residue_feature
         # go embedding
         go_embedding = []
@@ -66,13 +67,13 @@ class ProteinFeatureLoader:
             if go_id in self.all_embedding_dict:
                 e = self.all_embedding_dict[go_id].tolist()
                 go_embedding.append(e)
-        go_embedding = torch.Tensor(go_embedding).to(device)
+        go_embedding = torch.Tensor(go_embedding).to(self.device)
         go_embedding = torch.sum(go_embedding, dim=0)
         # pssm feature
         pssm = PSSMGenerator.readFromPSSM(pssm_file)
         
         
-        # pick 50 residues
+        # pick  residues
         indexes = ResiduePicker(record=record, pssm=pssm).pick_residue(number=self.pick_number)
         # last index add length of protein
         indexes.append(lenth_of_protein)
@@ -85,10 +86,12 @@ class ProteinFeatureLoader:
                 picked_pssm.append(pssm[index])
             else:
                 picked_pssm.append([0] * 20)
-        picked_pssm = torch.Tensor(picked_pssm).to(device)
-        indexes = torch.Tensor(indexes).to(device)
+        picked_pssm = torch.Tensor(picked_pssm).to(self.device)
+        norm_picked_pssm = torch.nn.functional.normalize(picked_pssm, dim=1)
+        indexes = torch.IntTensor(indexes).to(self.device)
         
-        return G_residue, go_embedding, picked_pssm, indexes
+        return G_residue, go_embedding, norm_picked_pssm, indexes
 
 if __name__ == "__main__":
-    ProteinFeatureLoader().default_loader("P47756")
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    ProteinFeatureLoader(pick_num= 50 ,device=device).default_loader("A9YTQ3")

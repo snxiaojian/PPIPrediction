@@ -10,10 +10,10 @@ def collate(samples):
     return G_residue, go_embedding, pssm, indexes, G_residue2, go_embedding2, pssm2, indexes2, torch.FloatTensor(labels)        
 
 class PPIDataset(Dataset):
-    def __init__(self,type):
+    def __init__(self,type, pick_num, device):
         
         super(PPIDataset,self).__init__()
-        self.protein_feature_loader = ProteinFeatureLoader().default_loader
+        self.protein_feature_loader = ProteinFeatureLoader(pick_num=pick_num,device=device).default_loader
         ppi_items=[]
         with open('./data/dataset/'+type+'_ppi.tsv', 'r') as fh: 	        
             for line in fh: 
@@ -31,4 +31,4 @@ class PPIDataset(Dataset):
         return G_residue, go_embedding, pssm, indexes, G_residue2, go_embedding2, pssm2, indexes2, label
 
     def __len__(self):
-        return 4000
+        return len(self.ppi_items)

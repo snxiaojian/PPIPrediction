@@ -11,7 +11,7 @@ sys.path.append("./")
 from ppi_network.PPIDataset import PPIDataset, collate
 from ppi_network.GPSSPPIModel import GPSSPPIModel
 
-device = torch.device('cuda')
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 def predicting(model, loader):
     model.eval()
@@ -27,31 +27,34 @@ def predicting(model, loader):
             total_labels = torch.cat((total_labels.cpu(), y.float().cpu()), 0)
             
     return total_labels.numpy().flatten(),total_preds.numpy().flatten()
-
+    
 def toTensor(list_of_tensors):
     tensor_of_tensors = torch.stack((list_of_tensors))
     return tensor_of_tensors.to(device)
-    
-def train():
 
+def train():
     train_losses = []
     train_accs = []
     
-    train_dataset = PPIDataset(type='train')
+    shuffle = False
+    batch_size = 100
+    pick_num = 50
+    
+    train_dataset = PPIDataset(type='train', pick_num=pick_num, device=device)
     train_loader = DataLoader(dataset=train_dataset,
-               batch_size=100,
-               shuffle=True,
+               batch_size=batch_size,
+               shuffle=shuffle,
                drop_last=False,
                collate_fn=collate)
     
-    test_dataset = PPIDataset(type='test')
+    test_dataset = PPIDataset(type='test', pick_num=pick_num, device=device)
     test_loader = DataLoader(dataset=test_dataset,
-               batch_size=100,
-               shuffle=True,
+               batch_size=batch_size,
+               shuffle=shuffle,
                drop_last=False,
                collate_fn=collate)
     
-    model = GPSSPPIModel().to(device)
+    model = GPSSPPIModel(batch_size=batch_size, device=device, pick_num=pick_num).to(device=device)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     criterion = torch.nn.BCELoss()
     
