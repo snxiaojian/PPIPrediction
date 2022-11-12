@@ -22,6 +22,8 @@ class GPSSPPIModel(torch.nn.Module):
         self.go_output_dim = 64
         self.pssm_size = 20
         self.pssm_out_dim = 64
+        self.one_tensor = torch.ones(self.batch_size * self.pick_num).type(torch.IntTensor).to(device)
+        self.zero_tensor = torch.zeros((1, self.g_embedding_size)).type(torch.FloatTensor).to(device)
         # gcn
         self.gcn1 = GATConv(self.g_embedding_size,self.g_embedding_size, 1)
         self.gcn2 = GATConv(self.g_embedding_size,self.g_embedding_size, 1)
@@ -69,8 +71,8 @@ class GPSSPPIModel(torch.nn.Module):
         indexes = split[0]
         # get the residue feature of protein
         total_residue_in_graph = G_residue.ndata['feat'].shape[0]
-        total_residue_in_graph = torch.ones(self.batch_size * self.pick_num) * total_residue_in_graph
-        total_residue_in_graph = total_residue_in_graph.type(torch.IntTensor).to(self.device)
+        total_residue_in_graph = self.one_tensor * int(total_residue_in_graph)
+
         # the protein length of a batch of protein , shape is (batch_size)
         protein_length = torch.squeeze(split[1])
         indexes_cumsum =  torch.cumsum(protein_length, dim=0)
@@ -88,8 +90,8 @@ class GPSSPPIModel(torch.nn.Module):
         g_feature = self.relu(self.gcn3(G_residue, g_feature))
         g_feature = g_feature.reshape(-1,self.g_embedding_size)
         # add zero to last row
-        zero = torch.zeros((1, self.g_embedding_size)).type(torch.FloatTensor).to(self.device)
-        g_feature = torch.cat((g_feature, zero), dim = 0)
+
+        g_feature = torch.cat((g_feature, self.zero_tensor), dim = 0)
         
         # if the protein length is less than pick_num, we need to add zero to the residue feature
         # so that the residue feature can be the same shape as indexes

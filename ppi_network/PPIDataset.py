@@ -4,16 +4,19 @@ import re
 import sys
 sys.path.append("./")
 from ppi_network.ProteinFeatureLoader import ProteinFeatureLoader
+from ppi_network.save_dataset_tensor_to_disk import tensor_filename
 
 def collate(samples):
     G_residue, go_embedding, pssm, indexes, G_residue2, go_embedding2, pssm2, indexes2, labels = map(list, zip(*samples))
-    return G_residue, go_embedding, pssm, indexes, G_residue2, go_embedding2, pssm2, indexes2, torch.FloatTensor(labels)        
+    return G_residue, go_embedding, pssm, indexes, G_residue2, go_embedding2, pssm2, indexes2, torch.FloatTensor(labels)            
 
 class PPIDataset(Dataset):
     def __init__(self,type, pick_num, device):
         
         super(PPIDataset,self).__init__()
-        self.protein_feature_loader = ProteinFeatureLoader(pick_num=pick_num,device=device).default_loader
+        # self.protein_feature_loader = ProteinFeatureLoader(pick_num=pick_num,device=device).default_loader
+        self.device = device
+        self.pick_num = pick_num
         ppi_items=[]
         with open('./data/dataset/'+type+'_ppi.tsv', 'r') as fh: 	        
             for line in fh: 
@@ -26,9 +29,23 @@ class PPIDataset(Dataset):
 
     def __getitem__(self, index):
         p1,p2, label = self.ppi_items[index]
-        G_residue, go_embedding, pssm, indexes = self.protein_feature_loader(p1) 
-        G_residue2, go_embedding2, pssm2, indexes2 = self.protein_feature_loader(p2)
-        return G_residue, go_embedding, pssm, indexes, G_residue2, go_embedding2, pssm2, indexes2, label
+        G_residue, go_embedding, pssm, indexes = self.default_loader(p1) 
+        G_residue2, go_embedding2, pssm2, indexes2 = self.default_loader(p2)
+        return G_residue.to(self.device), go_embedding.to(self.device), pssm.to(self.device), indexes.to(self.device), G_residue2.to(self.device), go_embedding2.to(self.device), pssm2, indexes2, label
 
     def __len__(self):
         return len(self.ppi_items)
+    
+    def default_loader(self,pid):
+        G_residue_file =  tensor_filename(pid,'G_residue',self.pick_num)
+        G_residue = torch.load(G_residue_file, map_location=self.device)
+        
+        go_embedding_file = tensor_filename(pid,'go_embedding',self.pick_num)
+        go_embedding = torch.load(go_embedding_file, map_location=self.device)
+        
+        norm_picked_pssm_file = tensor_filename(pid,'norm_picked_pssm',self.pick_num)
+        norm_picked_pssm = torch.load(norm_picked_pssm_file, map_location=self.device)
+        
+        indexes_file = tensor_filename(pid,'indexes',self.pick_num)
+        indexes = torch.load(indexes_file, map_location=self.device)
+        return G_residue, go_embedding, norm_picked_pssm, indexes 

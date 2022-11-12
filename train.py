@@ -37,7 +37,7 @@ def train():
     train_accs = []
     
     shuffle = False
-    batch_size = 100
+    batch_size = 1000
     pick_num = 50
     
     train_dataset = PPIDataset(type='train', pick_num=pick_num, device=device)

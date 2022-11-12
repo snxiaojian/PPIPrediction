@@ -14,8 +14,7 @@ from ppi_network.ResiduePicker import ResiduePicker
 
 
 class ProteinFeatureLoader:
-    def __init__(self, pick_num, device):
-        self.device = device
+    def __init__(self, pick_num):
         self.anotations = GOAParser.parsed_annotation()
         self.records, self.species_dict = records_from_filtered_input()
         self.residue_feature_loader = ResidueFeatureLoader()
@@ -57,9 +56,9 @@ class ProteinFeatureLoader:
         
         # residue graph
         residue_feature = self.residue_feature_loader.load_residue_feature(record)
-        residue_feature = torch.Tensor(residue_feature).to(self.device)
+        residue_feature = torch.Tensor(residue_feature)
         adj_residue = spp.coo_matrix(contact_map)
-        G_residue = dgl.from_scipy(adj_residue, device=self.device)
+        G_residue = dgl.from_scipy(adj_residue)
         G_residue.ndata['feat'] = residue_feature
         # go embedding
         go_embedding = []
@@ -67,7 +66,7 @@ class ProteinFeatureLoader:
             if go_id in self.all_embedding_dict:
                 e = self.all_embedding_dict[go_id].tolist()
                 go_embedding.append(e)
-        go_embedding = torch.Tensor(go_embedding).to(self.device)
+        go_embedding = torch.Tensor(go_embedding)
         go_embedding = torch.sum(go_embedding, dim=0)
         # pssm feature
         pssm = PSSMGenerator.readFromPSSM(pssm_file)
@@ -86,12 +85,10 @@ class ProteinFeatureLoader:
                 picked_pssm.append(pssm[index])
             else:
                 picked_pssm.append([0] * 20)
-        picked_pssm = torch.Tensor(picked_pssm).to(self.device)
+        picked_pssm = torch.Tensor(picked_pssm)
         norm_picked_pssm = torch.nn.functional.normalize(picked_pssm, dim=1)
-        indexes = torch.IntTensor(indexes).to(self.device)
-        
+        indexes = torch.IntTensor(indexes)
         return G_residue, go_embedding, norm_picked_pssm, indexes
 
 if __name__ == "__main__":
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    ProteinFeatureLoader(pick_num= 50 ,device=device).default_loader("A9YTQ3")
+    ProteinFeatureLoader(pick_num= 50).default_loader("A9YTQ3")
