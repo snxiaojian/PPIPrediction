@@ -32,6 +32,24 @@ def toTensor(list_of_tensors):
     tensor_of_tensors = torch.stack((list_of_tensors))
     return tensor_of_tensors.to(device)
 
+# get number in string
+def get_number(s):
+    return int(s.removeprefix("epoch").removesuffix(".pkl"))
+    
+def find_newest_model():
+    files = []
+    if not os.path.exists(model_dir()):
+        os.mkdir(model_dir())
+    for file in os.listdir(model_dir()):
+        files.append(file)
+    files.sort(key=lambda x: get_number(x), reverse=True)
+    if len(files) == 0:
+        return None
+    return files[0]
+
+def model_dir():
+    return './data/models/'
+
 def train():
     train_losses = []
     train_accs = []
@@ -58,7 +76,18 @@ def train():
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     criterion = torch.nn.BCELoss()
     
+    start_epoch = -1
+    newest_model_path = find_newest_model()
+    if newest_model_path != None:
+        checkpoint = torch.load(model_dir() + newest_model_path)
+        model.load_state_dict(checkpoint['model_state_dict'])
+        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        start_epoch = checkpoint['epoch']
+        loss = checkpoint['loss']
+    
     for epoch in range(100):
+        if epoch <= start_epoch:
+            continue
         total_loss = 0
         n_batches = 0
         correct = 0
@@ -87,7 +116,13 @@ def train():
         print("train avg_loss is",avg_loss)
         print("train ACC = ",acc)
         
-        torch.save(model.state_dict(), "./data/model_pkl/"+'epoch'+'%d.pkl'%(epoch+1))
+        save_path = model_dir() +'epoch'+'%d.pkl'%(epoch)
+        torch.save({
+            'epoch': epoch,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            'loss': avg_loss,
+            }, save_path)
         # test
         total_labels,total_preds = predicting(model,test_loader)
         test_acc = accuracy_score(total_labels, total_preds)
@@ -99,7 +134,7 @@ def train():
         test_spec = con_matrix[0][0]/(con_matrix[0][0]+con_matrix[0][1])
         test_mcc = (con_matrix[0][0]*con_matrix[1][1]-con_matrix[0][1]*con_matrix[1][0])/(((con_matrix[1][1]+con_matrix[0][1])*(con_matrix[1][1]+con_matrix[1][0])*(con_matrix[0][0]+con_matrix[0][1])*(con_matrix[0][0]+con_matrix[1][0]))**0.5)
         print("acc: ",test_acc," ; prec: ",test_prec," ; recall: ",test_recall," ; f1: ",test_f1," ; auc: ",test_auc," ; spec:",test_spec," ; mcc: ",test_mcc)
-        with open("./data/model_pkl/result.txt", 'a+') as fp:
+        with open(model_dir() + "result.txt", 'a+') as fp:
             fp.write('epoch:' + str(epoch+1) + '\ttrainacc=' + str(acc) +'\ttrainloss=' + str(avg_loss.item()) +'\tacc=' + str(test_acc) + '\tprec=' + str(test_prec) + '\trecall=' + str(test_recall) +  '\tf1=' + str(test_f1) + '\tauc=' + str(test_auc) + '\tspec='+str(test_spec)+ '\tmcc='+str(test_mcc)+'\n')
 
 if __name__ == "__main__":
