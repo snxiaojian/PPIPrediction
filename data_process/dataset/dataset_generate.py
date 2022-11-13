@@ -83,7 +83,7 @@ if __name__ == "__main__":
         print(information)
         informations.append(information)
         
-        ratio = negative_ratio_for_species(species, ppi_count)
+        ratio = 1
         information = "negative ratio for " + species + ": " + str(ratio) + "\n"
         print(information)
         informations.append(information)

@@ -7,6 +7,7 @@ import dgl
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score,roc_auc_score
 from sklearn.metrics import confusion_matrix
 import sys
+import datetime
 sys.path.append("./")
 from ppi_network.PPIDataset import PPIDataset, collate
 from ppi_network.GPSSPPIModel import GPSSPPIModel
@@ -20,6 +21,9 @@ def predicting(model, loader):
     print('Make prediction for {} samples...'.format(len(loader.dataset)))
     with torch.no_grad():
         for batch_idx,(G_residue,go_feature, pssm, indexes ,G_residue2, go_feature2,pssm2, indexes2, y) in enumerate(loader):
+            now = datetime.datetime.now()
+            print (now.strftime("%Y-%m-%d %H:%M:%S.%f"))
+            print("predicting batch: {}".format(batch_idx))
             output = model(dgl.batch(G_residue), toTensor(go_feature), toTensor(pssm), toTensor(indexes),
                                dgl.batch(G_residue2), toTensor(go_feature2), toTensor(pssm2), toTensor(indexes2))
             output = torch.round(output)
@@ -57,19 +61,20 @@ def train():
     shuffle = False
     batch_size = 1000
     pick_num = 50
+    drop_last = True
     
-    train_dataset = PPIDataset(type='train', pick_num=pick_num, device=device)
+    train_dataset = PPIDataset(type='train', pick_num=pick_num)
     train_loader = DataLoader(dataset=train_dataset,
                batch_size=batch_size,
                shuffle=shuffle,
-               drop_last=False,
+               drop_last=drop_last,
                collate_fn=collate)
     
-    test_dataset = PPIDataset(type='test', pick_num=pick_num, device=device)
+    test_dataset = PPIDataset(type='test', pick_num=pick_num)
     test_loader = DataLoader(dataset=test_dataset,
                batch_size=batch_size,
                shuffle=shuffle,
-               drop_last=False,
+               drop_last=drop_last,
                collate_fn=collate)
     
     model = GPSSPPIModel(batch_size=batch_size, device=device, pick_num=pick_num).to(device=device)
@@ -84,6 +89,18 @@ def train():
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
         start_epoch = checkpoint['epoch']
         loss = checkpoint['loss']
+        # total_labels,total_preds = predicting(model,test_loader)
+        # test_acc = accuracy_score(total_labels, total_preds)
+        # test_prec = precision_score(total_labels, total_preds)
+        # test_recall = recall_score(total_labels, total_preds)
+        # test_f1 = f1_score(total_labels, total_preds)
+        # test_auc = roc_auc_score(total_labels, total_preds)
+        # con_matrix = confusion_matrix(total_labels, total_preds)
+        # test_spec = con_matrix[0][0]/(con_matrix[0][0]+con_matrix[0][1])
+        # test_mcc = (con_matrix[0][0]*con_matrix[1][1]-con_matrix[0][1]*con_matrix[1][0])/(((con_matrix[1][1]+con_matrix[0][1])*(con_matrix[1][1]+con_matrix[1][0])*(con_matrix[0][0]+con_matrix[0][1])*(con_matrix[0][0]+con_matrix[1][0]))**0.5)
+        # print("acc: ",test_acc," ; prec: ",test_prec," ; recall: ",test_recall," ; f1: ",test_f1," ; auc: ",test_auc," ; spec:",test_spec," ; mcc: ",test_mcc)
+        # with open(model_dir() + "result.txt", 'a+') as fp:
+        #     fp.write('epoch:' + 0 + '\ttrainacc=' + str(acc) +'\ttrainloss=' + str(avg_loss.item()) +'\tacc=' + str(test_acc) + '\tprec=' + str(test_prec) + '\trecall=' + str(test_recall) +  '\tf1=' + str(test_f1) + '\tauc=' + str(test_auc) + '\tspec='+str(test_spec)+ '\tmcc='+str(test_mcc)+'\n')
     
     for epoch in range(100):
         if epoch <= start_epoch:
@@ -95,8 +112,9 @@ def train():
         with tqdm(train_loader, unit="batch") as tepoch:
             for G_residue,go_feature, pssm, indexes ,G_residue2, go_feature2,pssm2, indexes2, y in tepoch:
                 tepoch.set_description(f"Epoch {epoch}")
-                y_pred = model(dgl.batch(G_residue), toTensor(go_feature), toTensor(pssm), toTensor(indexes),
-                               dgl.batch(G_residue2), toTensor(go_feature2), toTensor(pssm2), toTensor(indexes2))
+                model.train()
+                y_pred = model(dgl.batch(G_residue).to(device), toTensor(go_feature), toTensor(pssm), toTensor(indexes),
+                               dgl.batch(G_residue2).to(device), toTensor(go_feature2), toTensor(pssm2), toTensor(indexes2))
                 y = y.unsqueeze(1).to(device)
                 correct += torch.eq(torch.round(y_pred),y).data.sum()
                 loss = criterion(y_pred,y)
