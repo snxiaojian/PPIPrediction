@@ -109,7 +109,7 @@ if __name__ == "__main__":
     test_negative_ppi = negative_ppi[int(len(negative_ppi)*train_test_ratio):]
     
     train_dataset = train_positive_ppi + train_negative_ppi
-    test_dataset = test_positive_ppi
+    test_dataset = test_positive_ppi + test_negative_ppi
     random.shuffle(train_dataset)
     random.shuffle(test_dataset)
     

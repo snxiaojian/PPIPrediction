@@ -8,7 +8,6 @@ class GPSSPPIModel(torch.nn.Module):
 
     def __init__(self, batch_size, device, pick_num):
         super(GPSSPPIModel,self).__init__()
-        torch.backends.cudnn.enabled = False
         self.batch_size = batch_size
         self.device = device
         self.pick_num = pick_num

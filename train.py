@@ -24,8 +24,8 @@ def predicting(model, loader):
             now = datetime.datetime.now()
             print (now.strftime("%Y-%m-%d %H:%M:%S.%f"))
             print("predicting batch: {}".format(batch_idx))
-            output = model(dgl.batch(G_residue), toTensor(go_feature), toTensor(pssm), toTensor(indexes),
-                               dgl.batch(G_residue2), toTensor(go_feature2), toTensor(pssm2), toTensor(indexes2))
+            output = model(dgl.batch(G_residue).to(device), toTensor(go_feature), toTensor(pssm), toTensor(indexes),
+                               dgl.batch(G_residue2).to(device), toTensor(go_feature2), toTensor(pssm2), toTensor(indexes2))
             output = torch.round(output)
             total_preds = torch.cat((total_preds.cpu(), output.cpu()), 0)
             total_labels = torch.cat((total_labels.cpu(), y.float().cpu()), 0)
@@ -45,7 +45,8 @@ def find_newest_model():
     if not os.path.exists(model_dir()):
         os.mkdir(model_dir())
     for file in os.listdir(model_dir()):
-        files.append(file)
+        if file.endswith(".pkl"):
+            files.append(file)
     files.sort(key=lambda x: get_number(x), reverse=True)
     if len(files) == 0:
         return None
@@ -55,9 +56,6 @@ def model_dir():
     return './data/models/'
 
 def train():
-    train_losses = []
-    train_accs = []
-    
     shuffle = False
     batch_size = 1000
     pick_num = 50
@@ -68,6 +66,8 @@ def train():
                batch_size=batch_size,
                shuffle=shuffle,
                drop_last=drop_last,
+               num_workers=0,
+               pin_memory=True,
                collate_fn=collate)
     
     test_dataset = PPIDataset(type='test', pick_num=pick_num)
@@ -75,6 +75,8 @@ def train():
                batch_size=batch_size,
                shuffle=shuffle,
                drop_last=drop_last,
+               num_workers=0,
+               pin_memory=True,
                collate_fn=collate)
     
     model = GPSSPPIModel(batch_size=batch_size, device=device, pick_num=pick_num).to(device=device)
@@ -89,19 +91,8 @@ def train():
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
         start_epoch = checkpoint['epoch']
         loss = checkpoint['loss']
-        # total_labels,total_preds = predicting(model,test_loader)
-        # test_acc = accuracy_score(total_labels, total_preds)
-        # test_prec = precision_score(total_labels, total_preds)
-        # test_recall = recall_score(total_labels, total_preds)
-        # test_f1 = f1_score(total_labels, total_preds)
-        # test_auc = roc_auc_score(total_labels, total_preds)
-        # con_matrix = confusion_matrix(total_labels, total_preds)
-        # test_spec = con_matrix[0][0]/(con_matrix[0][0]+con_matrix[0][1])
-        # test_mcc = (con_matrix[0][0]*con_matrix[1][1]-con_matrix[0][1]*con_matrix[1][0])/(((con_matrix[1][1]+con_matrix[0][1])*(con_matrix[1][1]+con_matrix[1][0])*(con_matrix[0][0]+con_matrix[0][1])*(con_matrix[0][0]+con_matrix[1][0]))**0.5)
-        # print("acc: ",test_acc," ; prec: ",test_prec," ; recall: ",test_recall," ; f1: ",test_f1," ; auc: ",test_auc," ; spec:",test_spec," ; mcc: ",test_mcc)
-        # with open(model_dir() + "result.txt", 'a+') as fp:
-        #     fp.write('epoch:' + 0 + '\ttrainacc=' + str(acc) +'\ttrainloss=' + str(avg_loss.item()) +'\tacc=' + str(test_acc) + '\tprec=' + str(test_prec) + '\trecall=' + str(test_recall) +  '\tf1=' + str(test_f1) + '\tauc=' + str(test_auc) + '\tspec='+str(test_spec)+ '\tmcc='+str(test_mcc)+'\n')
-    
+    train_losses = []
+    train_accs = []
     for epoch in range(100):
         if epoch <= start_epoch:
             continue
@@ -116,14 +107,15 @@ def train():
                 y_pred = model(dgl.batch(G_residue).to(device), toTensor(go_feature), toTensor(pssm), toTensor(indexes),
                                dgl.batch(G_residue2).to(device), toTensor(go_feature2), toTensor(pssm2), toTensor(indexes2))
                 y = y.unsqueeze(1).to(device)
-                correct += torch.eq(torch.round(y_pred),y).data.sum()
+                correct_of_this_batch = torch.eq(torch.round(y_pred),y).data.sum()
+                correct += correct_of_this_batch
                 loss = criterion(y_pred,y)
                 total_loss+=loss.data
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
                 n_batches+=1
-                tepoch.set_postfix(loss=loss.item())
+                tepoch.set_postfix(loss=loss.item(), correct=correct_of_this_batch.item()/batch_size)
                 
         avg_loss = total_loss/n_batches
         acc = correct/(len(train_loader.dataset))
