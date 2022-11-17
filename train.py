@@ -56,9 +56,11 @@ def model_dir():
     return './data/models/'
 
 def train():
+    torch.backends.cudnn.enabled = True
+    torch.backends.cudnn.benchmark = True
     shuffle = False
-    batch_size = 1000
-    pick_num = 50
+    batch_size = 300
+    pick_num = 100
     drop_last = True
     
     train_dataset = PPIDataset(type='train', pick_num=pick_num)

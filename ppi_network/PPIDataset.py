@@ -4,7 +4,7 @@ import re
 import sys
 sys.path.append("./")
 from ppi_network.ProteinFeatureLoader import ProteinFeatureLoader
-from ppi_network.save_dataset_tensor_to_disk import tensor_filename
+from data_process.tensor_to_disk.save_dataset_tensor_to_disk import tensor_filename
 
 def collate(samples):
     G_residue, go_embedding, pssm, indexes, G_residue2, go_embedding2, pssm2, indexes2, labels = map(list, zip(*samples))

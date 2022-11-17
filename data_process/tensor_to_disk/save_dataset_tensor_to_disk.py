@@ -1,14 +1,13 @@
 import torch
 import os
 from Bio import SeqIO
-from concurrent.futures import ProcessPoolExecutor
 import sys
 sys.path.append("./")
 from data_process.util import get_fasta_names_from_folder, id_from_record
 from ppi_network.ProteinFeatureLoader import ProteinFeatureLoader
 
 
-num_pick = 50
+num_pick = 100
 loader = ProteinFeatureLoader(pick_num= num_pick).default_loader
     
 def process(para_list):
@@ -49,8 +48,5 @@ if __name__ == "__main__":
                 recordIDs.append(id)
     para_list = []
     for index, pid in enumerate(recordIDs):
-        #   para_list.append([pid, index])
           process([pid, index])
-    # with ProcessPoolExecutor(max_workers=32) as pool:
-    #     pool.map(process,para_list)
     
