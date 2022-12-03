@@ -13,11 +13,10 @@ loader = ProteinFeatureLoader(pick_num= num_pick).default_loader
 def process(para_list):
     pid = para_list[0]
     index = para_list[1]
-    G_residue, go_embedding, norm_picked_pssm, indexes = loader(pid)
+    G_residue, go_embedding, norm_picked_pssm = loader(pid)
     save_tensor(pid,G_residue,'G_residue',num_pick)
     save_tensor(pid,go_embedding,'go_embedding',num_pick)
     save_tensor(pid,norm_picked_pssm,'norm_picked_pssm',num_pick)
-    save_tensor(pid,indexes,'indexes',num_pick)
     # if index % 10 == 0:
     print("process: " + str(index) + " " + pid)
     filename = tensor_filename(pid,"G_residue",num_pick)

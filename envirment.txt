@@ -4,3 +4,4 @@ from https://www.dgl.ai/pages/start.html
 conda install -c dglteam dgl-cuda11.6
 
 conda install tensorflow
+conda install gensim

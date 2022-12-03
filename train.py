@@ -20,12 +20,12 @@ def predicting(model, loader):
     total_labels = torch.Tensor()
     print('Make prediction for {} samples...'.format(len(loader.dataset)))
     with torch.no_grad():
-        for batch_idx,(G_residue,go_feature, pssm, indexes ,G_residue2, go_feature2,pssm2, indexes2, y) in enumerate(loader):
+        for batch_idx,(G_residue,go_feature, pssm ,G_residue2, go_feature2,pssm2, y) in enumerate(loader):
             now = datetime.datetime.now()
             print (now.strftime("%Y-%m-%d %H:%M:%S.%f"))
             print("predicting batch: {}".format(batch_idx))
-            output = model(dgl.batch(G_residue).to(device), toTensor(go_feature), toTensor(pssm), toTensor(indexes),
-                               dgl.batch(G_residue2).to(device), toTensor(go_feature2), toTensor(pssm2), toTensor(indexes2))
+            output = model(dgl.batch(G_residue).to(device), toTensor(go_feature), toTensor(pssm),
+                               dgl.batch(G_residue2).to(device), toTensor(go_feature2), toTensor(pssm2))
             output = torch.round(output)
             total_preds = torch.cat((total_preds.cpu(), output.cpu()), 0)
             total_labels = torch.cat((total_labels.cpu(), y.float().cpu()), 0)
@@ -59,7 +59,7 @@ def train():
     torch.backends.cudnn.enabled = True
     torch.backends.cudnn.benchmark = True
     shuffle = False
-    batch_size = 300
+    batch_size = 16
     pick_num = 100
     drop_last = True
     
@@ -103,11 +103,11 @@ def train():
         correct = 0
 
         with tqdm(train_loader, unit="batch") as tepoch:
-            for G_residue,go_feature, pssm, indexes ,G_residue2, go_feature2,pssm2, indexes2, y in tepoch:
+            for G_residue,go_feature, pssm ,G_residue2, go_feature2,pssm2, y in tepoch:
                 tepoch.set_description(f"Epoch {epoch}")
                 model.train()
-                y_pred = model(dgl.batch(G_residue).to(device), toTensor(go_feature), toTensor(pssm), toTensor(indexes),
-                               dgl.batch(G_residue2).to(device), toTensor(go_feature2), toTensor(pssm2), toTensor(indexes2))
+                y_pred = model(dgl.batch(G_residue).to(device), toTensor(go_feature), toTensor(pssm),
+                               dgl.batch(G_residue2).to(device), toTensor(go_feature2), toTensor(pssm2))
                 y = y.unsqueeze(1).to(device)
                 correct_of_this_batch = torch.eq(torch.round(y_pred),y).data.sum()
                 correct += correct_of_this_batch
