@@ -11,30 +11,34 @@ class GPSSPPIModel(torch.nn.Module):
         self.batch_size = batch_size
         self.device = device
         self.pick_num = pick_num
-        self.g_embedding_size = 256
+        self.graph_embedding_size = 1024
+        self.go_embedding_size = 1024 * 3
+        self.pssm_embedding_size = pick_num * 20
         self.drop = 0.2
 
+        
         # final residue size before combine acid
         self.residue_out_dim = 64
-        # mix graph and pssm feature
         self.graph_pssm_output_dim = 64
         self.go_output_dim = 64
-        self.pssm_size = 20
         self.pssm_out_dim = 64
+        
+        self.pssm_size = 20
+
         self.one_tensor = torch.ones(self.batch_size * self.pick_num).type(torch.IntTensor).to(device)
-        self.zero_tensor = torch.zeros((1, self.g_embedding_size)).type(torch.FloatTensor).to(device)
+        self.zero_tensor = torch.zeros((1, self.graph_embedding_size)).type(torch.FloatTensor).to(device)
         # gcn
-        self.gcn1 = GATConv(self.g_embedding_size,self.g_embedding_size, 1)
-        self.gcn2 = GATConv(self.g_embedding_size,self.g_embedding_size, 1)
-        self.gcn3 = GATConv(self.g_embedding_size,self.g_embedding_size, 1)
+        self.gcn1 = GATConv(self.graph_embedding_size,self.graph_embedding_size, 1)
+        self.gcn2 = GATConv(self.graph_embedding_size,self.graph_embedding_size, 1)
+        self.gcn3 = GATConv(self.graph_embedding_size,self.graph_embedding_size, 1)
         self.relu = torch.nn.ReLU()
-        self.fc_g1 = torch.nn.Linear((self.g_embedding_size + self.pssm_size), self.residue_out_dim)
+        self.fc_g1 = torch.nn.Linear((self.graph_embedding_size + self.pssm_size), self.residue_out_dim)
         self.fc_g2 = torch.nn.Linear(self.residue_out_dim * self.pick_num, 400)
         self.fc_g3 = torch.nn.Linear(400, self.graph_pssm_output_dim)
         
-        self.fc_go_embedding = torch.nn.Linear(512, 64)
+        self.fc_go_1 = torch.nn.Linear(self.go_embedding_size, 192)
+        self.fc_go_2 = torch.nn.Linear(192, self.go_output_dim)
 
-        self.maxpooling = MaxPooling()
         self.dropout = torch.nn.Dropout(self.drop)
 
 
@@ -83,11 +87,11 @@ class GPSSPPIModel(torch.nn.Module):
         
         indexes_in_batch_replace = torch.where(indexes_in_batch < 0, total_residue_in_graph, indexes_in_batch)
         g_feature = self.relu(self.gcn1(G_residue,G_residue.ndata['feat']))
-        g_feature = g_feature.reshape(-1,self.g_embedding_size)
+        g_feature = g_feature.reshape(-1,self.graph_embedding_size)
         g_feature = self.relu(self.gcn2(G_residue, g_feature))
-        g_feature = g_feature.reshape(-1,self.g_embedding_size)
+        g_feature = g_feature.reshape(-1,self.graph_embedding_size)
         g_feature = self.relu(self.gcn3(G_residue, g_feature))
-        g_feature = g_feature.reshape(-1,self.g_embedding_size)
+        g_feature = g_feature.reshape(-1,self.graph_embedding_size)
         # add zero to last row
 
         g_feature = torch.cat((g_feature, self.zero_tensor), dim = 0)
@@ -104,6 +108,7 @@ class GPSSPPIModel(torch.nn.Module):
         g_feature = self.relu(self.fc_g2(g_feature))
         g_feature = self.relu(self.fc_g3(g_feature))
 
-        go_embedding = self.relu(self.fc_go_embedding(go_embedding))
+        go_embedding = self.relu(self.fc_go_1(go_embedding))
+        go_embedding = self.relu(self.fc_go_2(go_embedding))
 
         return g_feature, go_embedding

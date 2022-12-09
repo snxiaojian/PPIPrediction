@@ -11,6 +11,7 @@ import datetime
 sys.path.append("./")
 from ppi_network.PPIDataset import PPIDataset, collate
 from ppi_network.GPSSPPIModel import GPSSPPIModel
+from ppi_network.GPSSPPIModel2 import GPSSPPIModel2
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -59,7 +60,7 @@ def train():
     torch.backends.cudnn.enabled = True
     torch.backends.cudnn.benchmark = True
     shuffle = False
-    batch_size = 300
+    batch_size = 128
     pick_num = 100
     drop_last = True
     

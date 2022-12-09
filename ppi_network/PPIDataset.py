@@ -14,7 +14,8 @@ class PPIDataset(Dataset):
     def __init__(self,type, pick_num):
         
         super(PPIDataset,self).__init__()
-        # self.protein_feature_loader = ProteinFeatureLoader(pick_num=pick_num).default_loader
+        # self.default_loader = ProteinFeatureLoader(pick_num=pick_num).default_loader
+        self.default_loader = self.disk_loader
         self.pick_num = pick_num
         ppi_items=[]
         with open('./data/dataset/'+type+'_ppi.tsv', 'r') as fh: 	        
@@ -35,7 +36,7 @@ class PPIDataset(Dataset):
     def __len__(self):
         return len(self.ppi_items)
     
-    def default_loader(self,pid):
+    def disk_loader(self,pid):
         G_residue_file =  tensor_filename(pid,'G_residue',self.pick_num)
         G_residue = torch.load(G_residue_file)
         

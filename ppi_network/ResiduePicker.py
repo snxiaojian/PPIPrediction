@@ -28,14 +28,14 @@ class ResiduePicker:
         self.pssm = pssm
         
     def pick_residue(self, number: int):
-        indexes = [-200000] * number
+        zeroes = [-200000] * number
         residues = []
         
         if len(self.sequence) < number:
             for i in range(len(self.sequence)):
                 residues.append(Residue(i, self.sequence[i], self.pssm[i]))
             residues.sort(key=lambda x: x.current_value)
-            result = [r.location for r in residues] + indexes[len(residues):number]
+            result = [r.location for r in residues] + zeroes[len(residues):number]
             return result
         else:
             for i in range(len(self.sequence)):

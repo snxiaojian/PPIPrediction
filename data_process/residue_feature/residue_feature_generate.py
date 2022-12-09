@@ -18,7 +18,7 @@ def load_sequence_data():
                  sequences.append(" " + record.seq._data + " ")
     return sequences
 
-def generate_triple_feature():
+def generate_triple_feature(feature_size, epochs):
     sequences = load_sequence_data()
     k = 3
     triple_AA_list = [[seq[i-k//2:i+k//2+1] for i in range(k//2,len(seq)-k//2)] for seq in sequences]
@@ -30,8 +30,8 @@ def generate_triple_feature():
                 triples_set.add(triple)
     triple_count = len(triples_set)
     print("triple count: " + str(triple_count))
-    feat_size = 256 - 27
-    model = Word2Vec(triple_AA_list, window=13, vector_size=feat_size, workers=64, sg=1, min_count=1, epochs=20)
+    feat_size = feature_size
+    model = Word2Vec(triple_AA_list, window=13, vector_size=feat_size, workers=32, sg=1, min_count=1, epochs=epochs)
     seq2vec_result = {}
     model_result = model.wv
     for triple in triples_set:
@@ -46,6 +46,6 @@ def save_triple_feature_dict_with_json(jsonObject):
         json.dump(jsonObject, f)
 
 if __name__ == '__main__':
-    triple_feature = generate_triple_feature()
+    triple_feature = generate_triple_feature(feature_size=1024-27, epochs=10)
     save_triple_feature_dict_with_json(triple_feature)
     

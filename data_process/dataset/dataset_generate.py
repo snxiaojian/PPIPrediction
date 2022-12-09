@@ -15,7 +15,8 @@ def recordIDs_for_file(file):
     recordIDs = []
     with open(fasta_file, 'r') as f:
         for record in SeqIO.parse(f, "fasta"):
-            recordIDs.append(id_from_record(record))
+            if len(record.seq._data) >= 50:
+                recordIDs.append(id_from_record(record))
     return recordIDs
 
 def generate_ppi(ratio, biogrid_network, recordIDs):
@@ -56,7 +57,7 @@ def negative_ratio_for_species(species, ppi_count):
         raise ValueError("Species not supported")
     protein_num = len([1 for line in open(file) if line.startswith(">")])
     negative_ppi_ratio =  math.pow(protein_num, 2) / (ppi_count * 2 * 1000 * 3)
-    return math.floor(negative_ppi_ratio)
+    return negative_ppi_ratio
 
 def write_ppi_to_tsv(ppi_items, type):
     file = "./data/dataset/" + type + "_ppi.tsv"
@@ -83,7 +84,8 @@ if __name__ == "__main__":
         print(information)
         informations.append(information)
         
-        ratio = 1
+        ratio = negative_ratio_for_species(species, ppi_count)
+        ratio = min(ratio, 5)
         information = "negative ratio for " + species + ": " + str(ratio) + "\n"
         print(information)
         informations.append(information)
@@ -99,20 +101,27 @@ if __name__ == "__main__":
         positive_ppi.extend(positive_ppi_in_species)
         negative_ppi.extend(negative_ppi_in_species)
     write_ppi_to_tsv(positive_ppi+negative_ppi, "whole")
-    write_infomation_to_file(informations, "./data/dataset/information.txt")
+    
     train_test_ratio = 0.8
     random.shuffle(positive_ppi)
     random.shuffle(negative_ppi)
-    train_positive_ppi = positive_ppi[:int(len(positive_ppi)*train_test_ratio)]
-    train_negative_ppi = negative_ppi[:int(len(negative_ppi)*train_test_ratio)]
-    test_positive_ppi = positive_ppi[int(len(positive_ppi)*train_test_ratio):]
-    test_negative_ppi = negative_ppi[int(len(negative_ppi)*train_test_ratio):]
+    positive_ppi_count = len(positive_ppi)
+    
+    train_positive_ppi = positive_ppi[:int(positive_ppi_count*train_test_ratio)]
+    train_negative_ppi = negative_ppi[:int(len(negative_ppi) - positive_ppi_count * (1-train_test_ratio))]
+    test_positive_ppi = positive_ppi[int(positive_ppi_count*train_test_ratio):]
+    test_negative_ppi = negative_ppi[int(len(negative_ppi) - positive_ppi_count * (1-train_test_ratio)):]
     
     train_dataset = train_positive_ppi + train_negative_ppi
     test_dataset = test_positive_ppi + test_negative_ppi
     random.shuffle(train_dataset)
     random.shuffle(test_dataset)
+    informations.append("train positive ppi count: " + str(len(train_positive_ppi)) + "\n")
+    informations.append("train negative ppi count: " + str(len(train_negative_ppi)) + "\n")
+    informations.append("test positive ppi count: " + str(len(test_positive_ppi)) + "\n")
+    informations.append("test negative ppi count: " + str(len(test_negative_ppi)) + "\n")
     
+    write_infomation_to_file(informations, "./data/dataset/information.txt")
     write_ppi_to_tsv(train_dataset, "train")
     write_ppi_to_tsv(test_dataset, "test")
 
