@@ -11,8 +11,11 @@ def gene_from_record(record):
         return id_from_record(record)
     return record.description.split('GN=')[1].split(" ")[0]
 
-def records_from_filtered_input():
-    fasta_filtered_folder = "./data/filtered_input/"
+def records_from_filtered_input(has_go):
+    if has_go:
+        fasta_filtered_folder = "./data/filtered_input_with_go/"
+    else:
+        fasta_filtered_folder = "./data/filtered_input_no_go/"
     records = {}
     species_dict = {}
     for file in get_fasta_names_from_folder(fasta_filtered_folder):

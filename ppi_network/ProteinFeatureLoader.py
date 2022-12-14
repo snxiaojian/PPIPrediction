@@ -15,14 +15,15 @@ from go_rgcn.GeneOntology import GeneOntology
 
 
 class ProteinFeatureLoader:
-    def __init__(self, pick_num):
+    def __init__(self, pick_num, has_go):
+        self.pick_number = pick_num
+        self.has_go = has_go
         self.go_embedding_size = 1024
         self.anotations = GOAParser.parsed_annotation()
         self.gene_ontology = self.gene_ontology()
-        self.records, self.species_dict = records_from_filtered_input()
+        self.records, self.species_dict = records_from_filtered_input(has_go)
         self.residue_feature_loader = ResidueFeatureLoader()
         self.all_embedding_dict = self.load_embedding_dict()
-        self.pick_number = pick_num
     
     def load_embedding_dict(self):
         embedding_dict = numpy.load("./data/go/go_embedding.npy", allow_pickle=True)
@@ -41,14 +42,35 @@ class ProteinFeatureLoader:
         record = self.records[pid]
         gene = gene_from_record(record)
         species = self.species_dict[pid]
+        
         if record is None:
             raise ValueError("No record for %s" % pid)
-        if pid in self.anotations:
-            go_ids = self.anotations[pid]
-        if gene in self.anotations:
-            go_ids = self.anotations[gene]
-        if go_ids is None:
-            raise ValueError("No anotation for %s" % pid)
+        
+        if self.has_go:
+        # go embedding
+            if pid in self.anotations:
+                go_ids = self.anotations[pid]
+            if gene in self.anotations:
+                go_ids = self.anotations[gene]
+            if go_ids is None:
+                raise ValueError("No anotation for %s" % pid)
+            go_embedding_bp = []
+            go_embedding_mf = []
+            go_embedding_cc = []
+            for go_id in go_ids:
+                if go_id in self.all_embedding_dict:
+                    e = self.all_embedding_dict[go_id].tolist()
+                    go_term = self.gene_ontology[go_id]
+                    if go_term.namespace == "biological_process":
+                        go_embedding_bp.append(e)
+                    if go_term.namespace == "molecular_function":
+                        go_embedding_mf.append(e)
+                    if go_term.namespace == "cellular_component":
+                        go_embedding_cc.append(e)
+            go_embedding_bp = self.go_embedding_zero_if_empty(go_embedding_bp)
+            go_embedding_mf = self.go_embedding_zero_if_empty(go_embedding_mf)
+            go_embedding_cc = self.go_embedding_zero_if_empty(go_embedding_cc)
+            go_embedding = torch.cat((go_embedding_bp, go_embedding_mf, go_embedding_cc), dim = 0)
         
         pssm_file = "./data/pssm/" + species + "/" + pid + ".pssm"
         if not os.path.exists(pssm_file):
@@ -71,24 +93,7 @@ class ProteinFeatureLoader:
         adj_residue = spp.coo_matrix(contact_map)
         G_residue = dgl.from_scipy(adj_residue)
         G_residue.ndata['feat'] = residue_feature
-        # go embedding
-        go_embedding_bp = []
-        go_embedding_mf = []
-        go_embedding_cc = []
-        for go_id in go_ids:
-            if go_id in self.all_embedding_dict:
-                e = self.all_embedding_dict[go_id].tolist()
-                go_term = self.gene_ontology[go_id]
-                if go_term.namespace == "biological_process":
-                    go_embedding_bp.append(e)
-                if go_term.namespace == "molecular_function":
-                    go_embedding_mf.append(e)
-                if go_term.namespace == "cellular_component":
-                    go_embedding_cc.append(e)
-        go_embedding_bp = self.go_embedding_zero_if_empty(go_embedding_bp)
-        go_embedding_mf = self.go_embedding_zero_if_empty(go_embedding_mf)
-        go_embedding_cc = self.go_embedding_zero_if_empty(go_embedding_cc)
-        go_embedding = torch.cat((go_embedding_bp, go_embedding_mf, go_embedding_cc), dim = 0)
+
         # pssm feature
         pssm = PSSMGenerator.readFromPSSM(pssm_file)
         
@@ -110,7 +115,10 @@ class ProteinFeatureLoader:
         # last index add length of protein
         indexes.append(lenth_of_protein)
         indexes = torch.IntTensor(indexes)
-        return G_residue, go_embedding, norm_picked_pssm, indexes
+        if self.has_go:
+            return G_residue, go_embedding, norm_picked_pssm, indexes
+        else:
+            return G_residue, norm_picked_pssm, indexes
 
 if __name__ == "__main__":
-    ProteinFeatureLoader(pick_num= 50).default_loader("A9YTQ3")
+    ProteinFeatureLoader(pick_num = 50, has_go = True).default_loader("A9YTQ3")

@@ -11,12 +11,10 @@ from data_process.util import get_fasta_names_from_folder, id_from_record
 from data_process.biogrid.BioGridParser import BioGridParser
 
 def recordIDs_for_file(file):
-    fasta_file = "./data/filtered_input/" + file
     recordIDs = []
-    with open(fasta_file, 'r') as f:
+    with open(file, 'r') as f:
         for record in SeqIO.parse(f, "fasta"):
-            if len(record.seq._data) >= 50:
-                recordIDs.append(id_from_record(record))
+            recordIDs.append(id_from_record(record))
     return recordIDs
 
 def generate_ppi(ratio, biogrid_network, recordIDs):
@@ -71,8 +69,12 @@ def write_infomation_to_file(information, file):
         f.writelines(information)
         print("appending to " + file)
 
-if __name__ == "__main__":
-    files = get_fasta_names_from_folder("./data/filtered_input")
+def generate_dateset(with_go):
+    if with_go:
+        folder =  "./data/filtered_input_with_go"
+    else:
+        folder = "./data/filtered_input_no_go"
+    files = get_fasta_names_from_folder(folder)
     positive_ppi = []
     negative_ppi = []
     informations = []
@@ -85,11 +87,11 @@ if __name__ == "__main__":
         informations.append(information)
         
         ratio = negative_ratio_for_species(species, ppi_count)
-        ratio = min(ratio, 5)
+        ratio = min(ratio, 7)
         information = "negative ratio for " + species + ": " + str(ratio) + "\n"
         print(information)
         informations.append(information)
-        recordIDs = recordIDs_for_file(file)
+        recordIDs = recordIDs_for_file(folder+"/"+file)
 
         positive_ppi_in_species, negative_ppi_in_species = generate_ppi(ratio, biogrid_network, recordIDs)
         information = "positive ppi count for " + species + ": " + str(len(positive_ppi_in_species)) + "\n"
@@ -121,9 +123,14 @@ if __name__ == "__main__":
     informations.append("test positive ppi count: " + str(len(test_positive_ppi)) + "\n")
     informations.append("test negative ppi count: " + str(len(test_negative_ppi)) + "\n")
     
-    write_infomation_to_file(informations, "./data/dataset/information.txt")
-    write_ppi_to_tsv(train_dataset, "train")
-    write_ppi_to_tsv(test_dataset, "test")
-
+    with_go_str = "_with_go" if with_go else "_no_go"
+    write_infomation_to_file(informations, "./data/dataset/informations" + with_go_str + ".txt")
+    write_ppi_to_tsv(train_dataset, "train"+ with_go_str)
+    write_ppi_to_tsv(test_dataset, "test"+ with_go_str)
+    
+if __name__ == "__main__":
+    generate_dateset(with_go=True)
+    generate_dateset(with_go=False)
+    
     
     

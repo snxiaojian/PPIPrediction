@@ -9,9 +9,9 @@ from sklearn.metrics import confusion_matrix
 import sys
 import datetime
 sys.path.append("./")
-from ppi_network.PPIDataset import PPIDataset, collate
-from ppi_network.GPSSPPIModel import GPSSPPIModel
-from ppi_network.GPSSPPIModel2 import GPSSPPIModel2
+from ppi_network.PPIDatasetWithGo import PPIDatasetWithGo, collate
+from ppi_network.PSSGPPIModel import PSSGPPIModel
+
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -54,7 +54,7 @@ def find_newest_model():
     return files[0]
 
 def model_dir():
-    return './data/models/'
+    return './data/PSSGPPIModels/'
 
 def train():
     torch.backends.cudnn.enabled = True
@@ -64,7 +64,7 @@ def train():
     pick_num = 100
     drop_last = True
     
-    train_dataset = PPIDataset(type='train', pick_num=pick_num)
+    train_dataset = PPIDatasetWithGo(type='train', pick_num=pick_num)
     train_loader = DataLoader(dataset=train_dataset,
                batch_size=batch_size,
                shuffle=shuffle,
@@ -73,7 +73,7 @@ def train():
                pin_memory=True,
                collate_fn=collate)
     
-    test_dataset = PPIDataset(type='test', pick_num=pick_num)
+    test_dataset = PPIDatasetWithGo(type='test', pick_num=pick_num)
     test_loader = DataLoader(dataset=test_dataset,
                batch_size=batch_size,
                shuffle=shuffle,
@@ -82,7 +82,7 @@ def train():
                pin_memory=True,
                collate_fn=collate)
     
-    model = GPSSPPIModel(batch_size=batch_size, device=device, pick_num=pick_num).to(device=device)
+    model = PSSGPPIModel(batch_size=batch_size, device=device, pick_num=pick_num).to(device=device)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     criterion = torch.nn.BCELoss()
     
