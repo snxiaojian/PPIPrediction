@@ -1,12 +1,11 @@
 import torch
-from dgl.nn import GATConv
 import torch.nn.functional as F
 import random
 
-class PSSPPIModel(torch.nn.Module):
+class PSSFastPPIModel(torch.nn.Module):
 
     def __init__(self, batch_size, device, pick_num):
-        super(PSSPPIModel,self).__init__()
+        super(PSSFastPPIModel,self).__init__()
         self.batch_size = batch_size
         self.device = device
         self.pick_num = pick_num
@@ -25,19 +24,15 @@ class PSSPPIModel(torch.nn.Module):
         self.one_tensor = torch.ones(self.batch_size * self.pick_num).type(torch.IntTensor).to(device)
         self.zero_tensor = torch.zeros((1, self.graph_embedding_size)).type(torch.FloatTensor).to(device)
         # gcn
-        self.gcn1 = GATConv(self.graph_embedding_size,self.graph_embedding_size, 1)
-        self.gcn2 = GATConv(self.graph_embedding_size,self.graph_embedding_size, 1)
-        self.gcn3 = GATConv(self.graph_embedding_size,self.graph_embedding_size, 1)
+        
         self.relu = torch.nn.ReLU()
         self.fc_g1 = torch.nn.Linear((self.graph_embedding_size + self.pssm_size), self.residue_out_dim)
-        self.fc_g2 = torch.nn.Linear(self.residue_out_dim * self.pick_num, 400)
-        self.fc_g3 = torch.nn.Linear(400, self.graph_pssm_output_dim)
+        self.fc_g2 = torch.nn.Linear(self.residue_out_dim * self.pick_num, self.graph_pssm_output_dim)
 
         self.dropout = torch.nn.Dropout(self.drop)
 
         # combined layers
-        self.fc1 = torch.nn.Linear( self.graph_pssm_output_dim*2, 256)
-        self.fc2 = torch.nn.Linear(256,32)
+        self.fc = torch.nn.Linear( self.graph_pssm_output_dim*2, 32)
         self.out = torch.nn.Linear(32, 1)
 
     # input1 input2
@@ -50,10 +45,7 @@ class PSSPPIModel(torch.nn.Module):
         else:
             feature = torch.cat((graph_feature, graph_feature2), dim=1)
         
-        x = self.fc1(feature)
-        x = self.relu(x)
-        x = self.dropout(x)
-        x = self.fc2(x)
+        x = self.fc(feature)
         x = self.relu(x)
         x = self.dropout(x)
         out = self.out(x)
@@ -79,16 +71,7 @@ class PSSPPIModel(torch.nn.Module):
         indexes_in_batch = torch.add(indexes, indexes_cumsum).reshape(-1).to(self.device)
         
         indexes_in_batch_replace = torch.where(indexes_in_batch < 0, total_residue_in_graph, indexes_in_batch)
-        G_residue = G_residue.add_self_loop()
-        g_feature = self.relu(self.gcn1(G_residue,G_residue.ndata['feat']))
-        g_feature = g_feature.reshape(-1,self.graph_embedding_size)
-        g_feature = self.relu(self.gcn2(G_residue, g_feature))
-        g_feature = g_feature.reshape(-1,self.graph_embedding_size)
-        g_feature = self.relu(self.gcn3(G_residue, g_feature))
-        g_feature = g_feature.reshape(-1,self.graph_embedding_size)
-        # add zero to last row
-
-        g_feature = torch.cat((g_feature, self.zero_tensor), dim = 0)
+        g_feature = torch.cat((G_residue.ndata['feat'], self.zero_tensor), dim = 0)
         
         # if the protein length is less than pick_num, we need to add zero to the residue feature
         # so that the residue feature can be the same shape as indexes
@@ -100,5 +83,4 @@ class PSSPPIModel(torch.nn.Module):
         g_feature = self.relu(self.fc_g1(residue_feature))
         g_feature = g_feature.reshape(self.batch_size, -1)
         g_feature = self.relu(self.fc_g2(g_feature))
-        g_feature = self.relu(self.fc_g3(g_feature))
         return g_feature

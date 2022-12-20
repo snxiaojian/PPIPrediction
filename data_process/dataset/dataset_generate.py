@@ -108,11 +108,13 @@ def generate_dateset(with_go):
     random.shuffle(positive_ppi)
     random.shuffle(negative_ppi)
     positive_ppi_count = len(positive_ppi)
+    split_in_positive = int(positive_ppi_count*train_test_ratio)
+    split_in_negative = int(len(negative_ppi) - positive_ppi_count * (1-train_test_ratio))
     
-    train_positive_ppi = positive_ppi[:int(positive_ppi_count*train_test_ratio)]
-    train_negative_ppi = negative_ppi[:int(len(negative_ppi) - positive_ppi_count * (1-train_test_ratio))]
-    test_positive_ppi = positive_ppi[int(positive_ppi_count*train_test_ratio):]
-    test_negative_ppi = negative_ppi[int(len(negative_ppi) - positive_ppi_count * (1-train_test_ratio)):]
+    train_positive_ppi = positive_ppi[:split_in_positive]
+    train_negative_ppi = negative_ppi[:split_in_negative]
+    test_positive_ppi = positive_ppi[split_in_positive:]
+    test_negative_ppi = negative_ppi[split_in_negative:]
     
     train_dataset = train_positive_ppi + train_negative_ppi
     test_dataset = test_positive_ppi + test_negative_ppi

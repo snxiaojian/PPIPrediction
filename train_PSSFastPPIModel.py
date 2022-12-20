@@ -10,7 +10,7 @@ import sys
 import datetime
 sys.path.append("./")
 from ppi_network.PPIDatasetNoGo import PPIDatasetNoGo, collate
-from ppi_network.PSSPPIModel import PSSPPIModel
+from ppi_network.PSSFastPPIModel import PSSFastPPIModel
 
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -54,7 +54,7 @@ def find_newest_model():
     return files[0]
 
 def model_dir():
-    return './data/PSSPPIModels/'
+    return './data/PSSFastPPIModels/'
 
 def train():
     torch.backends.cudnn.enabled = True
@@ -82,7 +82,7 @@ def train():
                pin_memory=True,
                collate_fn=collate)
     
-    model = PSSPPIModel(batch_size=batch_size, device=device, pick_num=pick_num).to(device=device)
+    model = PSSFastPPIModel(batch_size=batch_size, device=device, pick_num=pick_num).to(device=device)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     criterion = torch.nn.BCELoss()
     
@@ -94,18 +94,18 @@ def train():
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
         start_epoch = checkpoint['epoch']
         loss = checkpoint['loss']
-        # total_labels,total_preds = predicting(model,test_loader)
-        # test_acc = accuracy_score(total_labels, total_preds)
-        # test_prec = precision_score(total_labels, total_preds)
-        # test_recall = recall_score(total_labels, total_preds)
-        # test_f1 = f1_score(total_labels, total_preds)
-        # test_auc = roc_auc_score(total_labels, total_preds)
-        # con_matrix = confusion_matrix(total_labels, total_preds)
-        # test_spec = con_matrix[0][0]/(con_matrix[0][0]+con_matrix[0][1])
-        # test_mcc = (con_matrix[0][0]*con_matrix[1][1]-con_matrix[0][1]*con_matrix[1][0])/(((con_matrix[1][1]+con_matrix[0][1])*(con_matrix[1][1]+con_matrix[1][0])*(con_matrix[0][0]+con_matrix[0][1])*(con_matrix[0][0]+con_matrix[1][0]))**0.5)
-        # print("acc: ",test_acc," ; prec: ",test_prec," ; recall: ",test_recall," ; f1: ",test_f1," ; auc: ",test_auc," ; spec:",test_spec," ; mcc: ",test_mcc)
-        # with open(model_dir() + "result.txt", 'a+') as fp:
-        #     fp.write('epoch:' + str(epoch+1) + '\ttrainacc=' + str(acc) +'\ttrainloss=' + str(avg_loss.item()) +'\tacc=' + str(test_acc) + '\tprec=' + str(test_prec) + '\trecall=' + str(test_recall) +  '\tf1=' + str(test_f1) + '\tauc=' + str(test_auc) + '\tspec='+str(test_spec)+ '\tmcc='+str(test_mcc)+'\n')
+        total_labels,total_preds = predicting(model,test_loader)
+        test_acc = accuracy_score(total_labels, total_preds)
+        test_prec = precision_score(total_labels, total_preds)
+        test_recall = recall_score(total_labels, total_preds)
+        test_f1 = f1_score(total_labels, total_preds)
+        test_auc = roc_auc_score(total_labels, total_preds)
+        con_matrix = confusion_matrix(total_labels, total_preds)
+        test_spec = con_matrix[0][0]/(con_matrix[0][0]+con_matrix[0][1])
+        test_mcc = (con_matrix[0][0]*con_matrix[1][1]-con_matrix[0][1]*con_matrix[1][0])/(((con_matrix[1][1]+con_matrix[0][1])*(con_matrix[1][1]+con_matrix[1][0])*(con_matrix[0][0]+con_matrix[0][1])*(con_matrix[0][0]+con_matrix[1][0]))**0.5)
+        print("acc: ",test_acc," ; prec: ",test_prec," ; recall: ",test_recall," ; f1: ",test_f1," ; auc: ",test_auc," ; spec:",test_spec," ; mcc: ",test_mcc)
+        with open(model_dir() + "result.txt", 'a+') as fp:
+            fp.write('epoch:' + str(epoch+1) + '\ttrainacc=' + str(acc) +'\ttrainloss=' + str(avg_loss.item()) +'\tacc=' + str(test_acc) + '\tprec=' + str(test_prec) + '\trecall=' + str(test_recall) +  '\tf1=' + str(test_f1) + '\tauc=' + str(test_auc) + '\tspec='+str(test_spec)+ '\tmcc='+str(test_mcc)+'\n')
     train_losses = []
     train_accs = []
     for epoch in range(100):

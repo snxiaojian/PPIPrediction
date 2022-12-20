@@ -10,9 +10,9 @@ class PSSMGenerator:
     temp_fasta_folder = "./data_process/PSSM/temp/"
     db_folder = "./data/customdb/customdb"
 
-    def __init__(self, species):
+    def __init__(self, file ,species):
             records = []
-            fasta_file = "./data/input/" + species + ".fasta"
+            fasta_file = file
             with open(fasta_file, 'r') as f:
                 for record in SeqIO.parse(f, "fasta"):
                     records.append(record)
@@ -91,7 +91,7 @@ class PSSMGenerator:
         fasta_path = self.fasta_file_path(record)
         pssm_file_path = self.pssm_file_path(record)
         print("generating: " + pssm_file_path)
-        cmd = 'psiblast -query '+ fasta_path + ' -db ' + PSSMGenerator.db_folder  + ' -evalue 0.001  -num_threads 1 -num_iterations 3 -out_ascii_pssm ' + pssm_file_path  + "> /dev/null 2>&1"
+        cmd = 'psiblast -query '+ fasta_path + ' -db ' + PSSMGenerator.db_folder  + ' -evalue 0.001  -num_threads 1 -num_iterations 3 -out_ascii_pssm ' + pssm_file_path  + " > /dev/null 2>&1"
         print("executing " + cmd)
         statu = os.system(cmd)
         assert statu == 0 , '生成PSSM文件失败,cmd命令有错'
@@ -114,8 +114,12 @@ class PSSMGenerator:
 
 
 if __name__ == "__main__":
-    files = get_fasta_names_from_folder("./data/input")
-    for file in files:
-        print("processing " + file)
-        pssm_generator = PSSMGenerator(file.split(".")[0])
-        pssm_generator.generate()
+    # files = get_fasta_names_from_folder("./data/input")
+    # for file in files:
+    #     print("processing " + file)
+    #     pssm_generator = PSSMGenerator(file, file.split(".")[0])
+    #     pssm_generator.generate()
+    file = "./data/input/peanut.fasta"
+    pssm_generator = PSSMGenerator(file, "peanut")
+    pssm_generator.generate()
+    

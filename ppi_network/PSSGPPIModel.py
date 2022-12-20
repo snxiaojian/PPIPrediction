@@ -85,6 +85,7 @@ class PSSGPPIModel(torch.nn.Module):
         indexes_in_batch = torch.add(indexes, indexes_cumsum).reshape(-1).to(self.device)
         
         indexes_in_batch_replace = torch.where(indexes_in_batch < 0, total_residue_in_graph, indexes_in_batch)
+        G_residue = G_residue.add_self_loop()
         g_feature = self.relu(self.gcn1(G_residue,G_residue.ndata['feat']))
         g_feature = g_feature.reshape(-1,self.graph_embedding_size)
         g_feature = self.relu(self.gcn2(G_residue, g_feature))
