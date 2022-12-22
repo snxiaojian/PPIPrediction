@@ -5,20 +5,22 @@ import sys
 sys.path.append("./")
 from data_process.util import get_fasta_names_from_folder, id_from_record
 from ppi_network.ProteinFeatureLoader import ProteinFeatureLoader
+from ppi_network.static_args import *
     
 def process(pid, index, num_pick, has_go, loader):
     if has_go:
-        G_residue, go_embedding, norm_picked_pssm, indexes = loader(pid)
+        G_residue, go_embedding, norm_picked_pssm, indexes = loader(pid, is_fast=False)
         save_tensor(pid,G_residue,'G_residue',num_pick)
         save_tensor(pid,go_embedding,'go_embedding',num_pick)
         save_tensor(pid,norm_picked_pssm,'norm_picked_pssm',num_pick)
         save_tensor(pid,indexes,'indexes',num_pick)
     else:
-        G_residue, norm_picked_pssm, indexes = loader(pid)
+        G_residue, norm_picked_pssm, indexes = loader(pid, is_fast=False)
         save_tensor(pid,G_residue,'G_residue',num_pick)
         save_tensor(pid,norm_picked_pssm,'norm_picked_pssm',num_pick)
         save_tensor(pid,indexes,'indexes',num_pick)
-    # if index % 10 == 0:
+        residue_with_pssm = loader(pid, is_fast=False)
+        save_tensor(pid,residue_with_pssm,'residue_with_pssm',pick_num_fast)
     print("process: " + str(index) + " " + pid)
     filename = tensor_filename(pid,"G_residue",num_pick)
     if not os.path.exists(filename):
@@ -56,7 +58,6 @@ def write_dataset_to_disk(num_pick, has_go):
           process(pid, index, num_pick, has_go, loader)
     
 if __name__ == "__main__":
-    num_pick = 100
-    write_dataset_to_disk(num_pick=num_pick, has_go=False)
+    write_dataset_to_disk(num_pick=pick_num_precise, has_go=False)
     # write_dataset_to_disk(has_go=True)
     

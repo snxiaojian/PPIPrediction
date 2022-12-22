@@ -20,7 +20,6 @@ class PSSGPPIModel(torch.nn.Module):
         self.residue_out_dim = 64
         self.graph_pssm_output_dim = 64
         self.go_output_dim = 64
-        self.pssm_out_dim = 64
         
         self.pssm_size = 20
 

@@ -12,7 +12,7 @@ from data_process.util import records_from_filtered_input, gene_from_record
 from data_process.pssm.PSSMGenerator import PSSMGenerator
 from ppi_network.ResiduePicker import ResiduePicker
 from go_rgcn.GeneOntology import GeneOntology
-
+from ppi_network.static_args import *
 
 class ProteinFeatureLoader:
     def __init__(self, pick_num, has_go):
@@ -38,7 +38,7 @@ class ProteinFeatureLoader:
             go_embedding = [[0] * self.go_embedding_size]
         return torch.sum(torch.Tensor(go_embedding), dim=0)
         
-    def default_loader(self, pid):
+    def default_loader(self, pid, is_fast):
         record = self.records[pid]
         gene = gene_from_record(record)
         species = self.species_dict[pid]
@@ -117,8 +117,18 @@ class ProteinFeatureLoader:
         indexes = torch.IntTensor(indexes)
         if self.has_go:
             return G_residue, go_embedding, norm_picked_pssm, indexes
+        elif is_fast:
+            indexes = indexes[0: pick_num_fast]
+            protein_length = residue_feature.shape[0]
+            total_residue_in_graph = torch.ones(pick_num_fast).type(torch.IntTensor) * int(protein_length)
+            indexes_replace = torch.where(indexes < 0, total_residue_in_graph, indexes)
+            zero_tensor = torch.zeros(1, 1024).type(torch.FloatTensor)
+            g_feature = torch.cat((residue_feature, zero_tensor), dim = 0)
+            selected_feature = torch.index_select(g_feature, 0, indexes_replace)
+            residue_feature = torch.cat((selected_feature, norm_picked_pssm), dim=1)
+            return residue_feature
         else:
             return G_residue, norm_picked_pssm, indexes
 
 if __name__ == "__main__":
-    ProteinFeatureLoader(pick_num = 50, has_go = True).default_loader("A9YTQ3")
+    ProteinFeatureLoader(pick_num = pick_num_precise, has_go = True).default_loader("A9YTQ3", is_fast=False)

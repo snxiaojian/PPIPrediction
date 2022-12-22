@@ -18,7 +18,6 @@ class PSSPPIModel(torch.nn.Module):
         # final residue size before combine acid
         self.residue_out_dim = 64
         self.graph_pssm_output_dim = 64
-        self.pssm_out_dim = 64
         
         self.pssm_size = 20
 

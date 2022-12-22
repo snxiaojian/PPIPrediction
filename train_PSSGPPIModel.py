@@ -8,12 +8,11 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 from sklearn.metrics import confusion_matrix
 import sys
 import datetime
+from train_util import *
 sys.path.append("./")
 from ppi_network.PPIDatasetWithGo import PPIDatasetWithGo, collate
 from ppi_network.PSSGPPIModel import PSSGPPIModel
-
-
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+from ppi_network.static_args import *
 
 def predicting(model, loader):
     model.eval()
@@ -32,36 +31,14 @@ def predicting(model, loader):
             total_labels = torch.cat((total_labels.cpu(), y.float().cpu()), 0)
             
     return total_labels.numpy().flatten(),total_preds.numpy().flatten()
-    
-def toTensor(list_of_tensors):
-    tensor_of_tensors = torch.stack((list_of_tensors))
-    return tensor_of_tensors.to(device)
-
-# get number in string
-def get_number(s):
-    return int(s.removeprefix("epoch").removesuffix(".pkl"))
-    
-def find_newest_model():
-    files = []
-    if not os.path.exists(model_dir()):
-        os.mkdir(model_dir())
-    for file in os.listdir(model_dir()):
-        if file.endswith(".pkl"):
-            files.append(file)
-    files.sort(key=lambda x: get_number(x), reverse=True)
-    if len(files) == 0:
-        return None
-    return files[0]
 
 def model_dir():
     return './data/PSSGPPIModels/'
 
 def train():
-    torch.backends.cudnn.enabled = True
-    torch.backends.cudnn.benchmark = True
     shuffle = False
     batch_size = 128
-    pick_num = 100
+    pick_num = pick_num_precise
     drop_last = True
     
     train_dataset = PPIDatasetWithGo(type='train', pick_num=pick_num)
@@ -130,25 +107,10 @@ def train():
         print("train ACC = ",acc)
         
         save_path = model_dir() +'epoch'+'%d.pkl'%(epoch)
-        torch.save({
-            'epoch': epoch,
-            'model_state_dict': model.state_dict(),
-            'optimizer_state_dict': optimizer.state_dict(),
-            'loss': avg_loss,
-            }, save_path)
+        save_model(model_dir(), epoch, model, optimizer)
         # test
         total_labels,total_preds = predicting(model,test_loader)
-        test_acc = accuracy_score(total_labels, total_preds)
-        test_prec = precision_score(total_labels, total_preds)
-        test_recall = recall_score(total_labels, total_preds)
-        test_f1 = f1_score(total_labels, total_preds)
-        test_auc = roc_auc_score(total_labels, total_preds)
-        con_matrix = confusion_matrix(total_labels, total_preds)
-        test_spec = con_matrix[0][0]/(con_matrix[0][0]+con_matrix[0][1])
-        test_mcc = (con_matrix[0][0]*con_matrix[1][1]-con_matrix[0][1]*con_matrix[1][0])/(((con_matrix[1][1]+con_matrix[0][1])*(con_matrix[1][1]+con_matrix[1][0])*(con_matrix[0][0]+con_matrix[0][1])*(con_matrix[0][0]+con_matrix[1][0]))**0.5)
-        print("acc: ",test_acc," ; prec: ",test_prec," ; recall: ",test_recall," ; f1: ",test_f1," ; auc: ",test_auc," ; spec:",test_spec," ; mcc: ",test_mcc)
-        with open(model_dir() + "result.txt", 'a+') as fp:
-            fp.write('epoch:' + str(epoch+1) + '\ttrainacc=' + str(acc) +'\ttrainloss=' + str(avg_loss.item()) +'\tacc=' + str(test_acc) + '\tprec=' + str(test_prec) + '\trecall=' + str(test_recall) +  '\tf1=' + str(test_f1) + '\tauc=' + str(test_auc) + '\tspec='+str(test_spec)+ '\tmcc='+str(test_mcc)+'\n')
+        write_acc_to_file(model_dir(), epoch, total_labels, total_preds, acc, avg_loss)
 
 if __name__ == "__main__":
     train()
