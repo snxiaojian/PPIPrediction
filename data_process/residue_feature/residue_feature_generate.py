@@ -6,6 +6,7 @@ from gensim.models import Word2Vec
 import json
 sys.path.append("./")
 from data_process.util import get_fasta_names_from_folder
+from ppi_network.static_args import *
 
 def load_sequence_data():
     folder = "./data/input/"
@@ -46,6 +47,6 @@ def save_triple_feature_dict_with_json(jsonObject):
         json.dump(jsonObject, f)
 
 if __name__ == '__main__':
-    triple_feature = generate_triple_feature(feature_size=1024-27, epochs=10)
+    triple_feature = generate_triple_feature(feature_size=residue_embedding_size-27, epochs=10)
     save_triple_feature_dict_with_json(triple_feature)
     

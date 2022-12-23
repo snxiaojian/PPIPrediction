@@ -1,6 +1,7 @@
 import torch
 import torch.nn.functional as F
 import random
+from ppi_network.static_args import *
 
 class PSSFastPPIModel(torch.nn.Module):
 
@@ -9,7 +10,7 @@ class PSSFastPPIModel(torch.nn.Module):
         self.batch_size = batch_size
         self.device = device
         self.pick_num = pick_num
-        self.graph_embedding_size = 1024
+        self.graph_embedding_size = residue_embedding_size
         self.pssm_embedding_size = pick_num * 20
         self.drop = 0.2
 
@@ -17,13 +18,11 @@ class PSSFastPPIModel(torch.nn.Module):
         # final residue size before combine acid
         self.residue_out_dim = 64
         self.graph_pssm_output_dim = 64
-        
-        self.pssm_size = 20
 
         # gcn
         
         self.relu = torch.nn.ReLU()
-        self.fc_g1 = torch.nn.Linear((self.graph_embedding_size + self.pssm_size), self.residue_out_dim)
+        self.fc_g1 = torch.nn.Linear((self.graph_embedding_size + pssm_size), self.residue_out_dim)
         self.fc_g2 = torch.nn.Linear(self.residue_out_dim * self.pick_num, self.graph_pssm_output_dim)
 
         self.dropout = torch.nn.Dropout(self.drop)

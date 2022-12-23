@@ -2,6 +2,7 @@ import torch
 from dgl.nn import GATConv
 import torch.nn.functional as F
 import random
+from ppi_network.static_args import *
 
 class PSSPPIModel(torch.nn.Module):
 
@@ -10,7 +11,7 @@ class PSSPPIModel(torch.nn.Module):
         self.batch_size = batch_size
         self.device = device
         self.pick_num = pick_num
-        self.graph_embedding_size = 1024
+        self.graph_embedding_size = residue_embedding_size
         self.pssm_embedding_size = pick_num * 20
         self.drop = 0.2
 
@@ -18,8 +19,6 @@ class PSSPPIModel(torch.nn.Module):
         # final residue size before combine acid
         self.residue_out_dim = 64
         self.graph_pssm_output_dim = 64
-        
-        self.pssm_size = 20
 
         self.one_tensor = torch.ones(self.batch_size * self.pick_num).type(torch.IntTensor).to(device)
         self.zero_tensor = torch.zeros((1, self.graph_embedding_size)).type(torch.FloatTensor).to(device)
@@ -28,7 +27,7 @@ class PSSPPIModel(torch.nn.Module):
         self.gcn2 = GATConv(self.graph_embedding_size,self.graph_embedding_size, 1)
         self.gcn3 = GATConv(self.graph_embedding_size,self.graph_embedding_size, 1)
         self.relu = torch.nn.ReLU()
-        self.fc_g1 = torch.nn.Linear((self.graph_embedding_size + self.pssm_size), self.residue_out_dim)
+        self.fc_g1 = torch.nn.Linear((self.graph_embedding_size + pssm_size), self.residue_out_dim)
         self.fc_g2 = torch.nn.Linear(self.residue_out_dim * self.pick_num, 400)
         self.fc_g3 = torch.nn.Linear(400, self.graph_pssm_output_dim)
 
@@ -94,7 +93,7 @@ class PSSPPIModel(torch.nn.Module):
         # use last row of zero to replace the missing residue feature
         selected_feature = torch.index_select(g_feature, 0, indexes_in_batch_replace)
         
-        residue_feature = torch.cat((selected_feature, pssm.reshape(-1, self.pssm_size)), dim=1)
+        residue_feature = torch.cat((selected_feature, pssm.reshape(-1, pssm_size)), dim=1)
         
         g_feature = self.relu(self.fc_g1(residue_feature))
         g_feature = g_feature.reshape(self.batch_size, -1)

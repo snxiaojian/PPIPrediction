@@ -5,22 +5,19 @@ import re
 import sys
 sys.path.append("./")
 from data_process.tensor_to_disk.save_dataset_tensor_to_disk import tensor_filename
-from ppi_network.ResidueFeatureLoader import ResidueFeatureLoader
 from ppi_network.static_args import *
 
 def fast_no_go_collate(samples):
     residue_with_pssm, residue_with_pssm2, labels = map(list, zip(*samples))
     return residue_with_pssm, residue_with_pssm2, torch.FloatTensor(labels)            
 
-class PPIDatasetFastNoGo(Dataset):
-    def __init__(self,type, pick_num):
+class PPIDatasetFast(Dataset):
+    def __init__(self,type):
         
-        super(PPIDatasetFastNoGo,self).__init__()
+        super(PPIDatasetFast,self).__init__()
         self.default_loader = self.disk_loader
-        self.pick_num = pick_num
-        self.residue_feature_loader = ResidueFeatureLoader()
         ppi_items=[]
-        with open('./data/dataset/'+type+'_no_go_ppi.tsv', 'r') as fh: 	        
+        with open('./data/dataset/'+type + "_" + feature_type_residue_pssm +'_ppi.tsv', 'r') as fh: 	        
             for line in fh: 
                 line = line.strip('\n')
                 line = line.rstrip('\n')

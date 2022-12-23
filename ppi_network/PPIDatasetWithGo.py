@@ -5,20 +5,20 @@ import sys
 sys.path.append("./")
 from ppi_network.ProteinFeatureLoader import ProteinFeatureLoader
 from data_process.tensor_to_disk.save_dataset_tensor_to_disk import tensor_filename
+from ppi_network.static_args import *
 
 def collate(samples):
     G_residue, go_embedding, pssm, indexes, G_residue2, go_embedding2, pssm2, indexes2, labels = map(list, zip(*samples))
     return G_residue, go_embedding, pssm, indexes, G_residue2, go_embedding2, pssm2, indexes2, torch.FloatTensor(labels)            
 
 class PPIDatasetWithGo(Dataset):
-    def __init__(self,type, pick_num):
+    def __init__(self,type):
         
         super(PPIDatasetWithGo,self).__init__()
         # self.default_loader = ProteinFeatureLoader(pick_num=pick_num).default_loader
         self.default_loader = self.disk_loader
-        self.pick_num = pick_num
         ppi_items=[]
-        with open('./data/dataset/'+type+'_with_go_ppi.tsv', 'r') as fh: 	        
+        with open('./data/dataset/'+type + "_" + feature_type_go_graph_pssm +'_ppi.tsv', 'r') as fh: 	        
             for line in fh: 
                 line = line.strip('\n')
                 line = line.rstrip('\n')
@@ -37,15 +37,15 @@ class PPIDatasetWithGo(Dataset):
         return len(self.ppi_items)
     
     def disk_loader(self,pid):
-        G_residue_file =  tensor_filename(pid,'G_residue',self.pick_num)
+        G_residue_file =  tensor_filename(pid,'G_residue',pick_num_precise)
         G_residue = torch.load(G_residue_file)
         
-        go_embedding_file = tensor_filename(pid,'go_embedding',self.pick_num)
+        go_embedding_file = tensor_filename(pid,'go_embedding',pick_num_precise)
         go_embedding = torch.load(go_embedding_file)
         
-        norm_picked_pssm_file = tensor_filename(pid,'norm_picked_pssm',self.pick_num)
+        norm_picked_pssm_file = tensor_filename(pid,'norm_picked_pssm',pick_num_precise)
         norm_picked_pssm = torch.load(norm_picked_pssm_file)
         
-        indexes_file = tensor_filename(pid,'indexes',self.pick_num)
+        indexes_file = tensor_filename(pid,'indexes',pick_num_precise)
         indexes = torch.load(indexes_file)
         return G_residue, go_embedding, norm_picked_pssm, indexes 

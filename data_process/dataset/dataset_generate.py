@@ -7,8 +7,9 @@ import os
 import math
 import sys
 sys.path.append("./")
-from data_process.util import get_fasta_names_from_folder, id_from_record
+from data_process.util import get_fasta_names_from_folder, id_from_record, fasta_folder_from_feature_type
 from data_process.biogrid.BioGridParser import BioGridParser
+from ppi_network.static_args import *
 
 def recordIDs_for_file(file):
     recordIDs = []
@@ -69,18 +70,18 @@ def write_infomation_to_file(information, file):
         f.writelines(information)
         print("appending to " + file)
 
-def generate_dateset(with_go):
-    if with_go:
-        folder =  "./data/filtered_input_with_go"
-    else:
-        folder = "./data/filtered_input_no_go"
+def generate_dateset(feature_type):
+    folder = fasta_folder_from_feature_type(feature_type)
     files = get_fasta_names_from_folder(folder)
     positive_ppi = []
     negative_ppi = []
     informations = []
     for file in files:
-        print("processing " + file)
         species = file.split(".")[0]
+        if species not in train_species:
+            print("ignoring " + file)
+            continue
+        print("processing " + file)
         biogrid_network, ppi_count = BioGridParser.parsed_network(species=species)
         information = "total biogrid: " + species + " ppi count: " + str(ppi_count) + "\n"
         print(information)
@@ -102,7 +103,7 @@ def generate_dateset(with_go):
         informations.append(information)
         positive_ppi.extend(positive_ppi_in_species)
         negative_ppi.extend(negative_ppi_in_species)
-    write_ppi_to_tsv(positive_ppi+negative_ppi, "whole")
+    write_ppi_to_tsv(positive_ppi+negative_ppi, "whole_"+ feature_type)
     
     train_test_ratio = 0.8
     random.shuffle(positive_ppi)
@@ -125,14 +126,11 @@ def generate_dateset(with_go):
     informations.append("test positive ppi count: " + str(len(test_positive_ppi)) + "\n")
     informations.append("test negative ppi count: " + str(len(test_negative_ppi)) + "\n")
     
-    with_go_str = "_with_go" if with_go else "_no_go"
-    write_infomation_to_file(informations, "./data/dataset/informations" + with_go_str + ".txt")
-    write_ppi_to_tsv(train_dataset, "train"+ with_go_str)
-    write_ppi_to_tsv(test_dataset, "test"+ with_go_str)
+    write_infomation_to_file(informations, "./data/dataset/informations_" + feature_type + ".txt")
+    write_ppi_to_tsv(train_dataset, "train_"+ feature_type)
+    write_ppi_to_tsv(test_dataset, "test_"+ feature_type)
     
 if __name__ == "__main__":
-    generate_dateset(with_go=True)
-    generate_dateset(with_go=False)
-    
-    
-    
+    generate_dateset(feature_type=feature_type_residue_pssm)
+    # generate_dateset(feature_type=feature_type_go_graph_pssm)
+    # generate_dateset(feature_type=feature_type_graph_pssm)
