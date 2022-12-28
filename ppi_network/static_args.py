@@ -14,7 +14,21 @@ feature_type_residue_pssm = "feature_type_residue_pssm"
 
 train_species = ["arabidopsis", "fly", "human", "yeast"]
 
+cross_species_validation_species = ["C-elegans", "Ecoli-K12-W3110", "fission-yeast", "SARS-CoV-2"]
+
+reason_species = ["NDH108"]
+
 reasoning_species = ["peanut"]
 
 dataset_for_training = "dataset_for_training"
 dataset_for_reasoning = "dataset_for_reasoning"
+
+
+taxid_dict={"Human": 9606,
+            "fly":7227,
+            "yeast":559292,
+            "arabidopsis":3702,
+            "C-elegans":6239,
+            "Ecoli-K12-W3110":316407,
+            "fission-yeast":284812,
+            "SARS-CoV-2":2697049}

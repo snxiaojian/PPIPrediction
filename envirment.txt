@@ -5,5 +5,6 @@ conda install -c dglteam dgl-cuda11.6
 
 conda install tensorflow
 conda install gensim
+conda install h5py
 
 sudo apt install ncbi-blast+

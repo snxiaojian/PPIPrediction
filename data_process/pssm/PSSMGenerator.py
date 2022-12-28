@@ -7,7 +7,7 @@ sys.path.append("./")
 from data_process.util import get_fasta_names_from_folder, id_from_record
 
 class PSSMGenerator:
-    temp_fasta_folder = "./data_process/PSSM/temp/"
+    temp_fasta_folder = "./data_process/pssm/temp/"
     db_folder = "./data/customdb/customdb"
 
     def __init__(self, file ,species):
@@ -105,21 +105,17 @@ class PSSMGenerator:
         recordNeedProcess = []
         for record in self.records:
             pssm_file_path = self.pssm_file_path(record)
-            if os.path.exists(pssm_file_path):
-                print("pssm file already exists: " + pssm_file_path)
-            else:
+            if not os.path.exists(pssm_file_path):
                 recordNeedProcess.append(record)
         with ProcessPoolExecutor() as pool:
             pool.map(self.process_with_record,recordNeedProcess, chunksize=6)
 
 
 if __name__ == "__main__":
-    # files = get_fasta_names_from_folder("./data/input")
-    # for file in files:
-    #     print("processing " + file)
-    #     pssm_generator = PSSMGenerator(file, file.split(".")[0])
-    #     pssm_generator.generate()
-    file = "./data/input/peanut.fasta"
-    pssm_generator = PSSMGenerator(file, "peanut")
-    pssm_generator.generate()
+    folder = "./data/input/"
+    files = get_fasta_names_from_folder(folder)
+    for file in files:
+        print("processing " + file)
+        pssm_generator = PSSMGenerator(folder + file, file.split(".")[0])
+        pssm_generator.generate()
     

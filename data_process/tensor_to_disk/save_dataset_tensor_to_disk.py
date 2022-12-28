@@ -35,14 +35,15 @@ def save_tensor(pid,tensor,type,num_pick):
     if not os.path.exists(filename):
         torch.save(tensor,filename)
         
-def write_dataset_to_disk(feature_type):        
-    recordIDs, species_dict = records_from_filtered_input(feature_type)
-
+def write_records_to_disk(recordIDs, feature_type):
     loader = ProteinFeatureLoader(feature_type).default_loader
     print("total number of records: %d" % len(recordIDs))
     for index, pid in enumerate(recordIDs):
           process(pid, index, feature_type, loader)
     
+def write_dataset_to_disk(feature_type):        
+    recordIDs, species_dict = records_from_filtered_input(feature_type)
+    write_records_to_disk(recordIDs, feature_type)
+    
 if __name__ == "__main__":
     write_dataset_to_disk(feature_type=feature_type_residue_pssm)
-    

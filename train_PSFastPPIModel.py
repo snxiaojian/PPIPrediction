@@ -32,9 +32,9 @@ def model_dir():
 
 def train():
     shuffle = False
-    batch_size = 2
+    batch_size = 5000
     pick_num = pick_num_fast
-    workers = 0
+    workers = 4
     drop_last = True
     pin_memory = True
     

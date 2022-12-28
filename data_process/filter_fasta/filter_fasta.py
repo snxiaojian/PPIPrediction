@@ -28,6 +28,7 @@ def data_has_pssm(file, id, record):
     
     pssm_file = "./data/pssm/" + species + "/" + id + ".pssm"
     if not os.path.exists(pssm_file):
+        print("dont' have pssm")
         return False
     acids = {'A','C','D','E','F','G','H','I','K','L','M','N','P','Q','R','S','T','V','W','Y'}
     if not set(record.seq._data).issubset(acids):

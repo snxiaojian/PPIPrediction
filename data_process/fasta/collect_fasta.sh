@@ -1,7 +1,10 @@
-wget https://rest.uniprot.org/uniprotkb/stream?download=true&format=fasta&query=%28%28taxonomy_id%3A9606%29%29 -O ./data/input/human.fasta
+declare -A taxid_dict
+taxid_dict=([9606]="Human" [7227]="fly" [559292]="yeast" [3702]="arabidopsis" [6239]="C-elegans" [316407]="Ecoli-K12-W3110" [284812]="fission-yeast" [2697049]="SARS-CoV-2")
 
-wget https://rest.uniprot.org/uniprotkb/stream?download=true&format=fasta&query=%28%28taxonomy_id%3A3702%29%29 -O ./data/input/arabidopsis.fasta
-
-wget https://rest.uniprot.org/uniprotkb/stream?download=true&format=fasta&query=%28Saccharomyces%20cerevisiae%29%20AND%20%28model_organism%3A559292%29 -O ./data/input/yeast.fasta
-
-wget https://rest.uniprot.org/uniprotkb/stream?download=true&format=fasta&query=%28Drosophila%20Melanogaster%29%20AND%20%28model_organism%3A7227%29 -O ./data/input/fly.fasta
+# Download fasta files from uniprot
+for id in "${!taxid_dict[@]}"
+do
+    filename="./data/input/${taxid_dict[$id]}.fasta"
+    echo "Downloading ${taxid_dict[$id]} from uniprot"
+    wget "https://rest.uniprot.org/uniprotkb/stream?download=true&format=fasta&query=taxonomy_id%3A$id" -O $filename
+done
