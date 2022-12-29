@@ -4,7 +4,7 @@ if [ ! -f "./data/customdb/uniprot_sprot.fasta" ]; then
 fi
 
 declare -A taxid_dict
-taxid_dict=([9606]="Human" [7227]="fly" [559292]="yeast" [3702]="arabidopsis" [6239]="C-elegans" [316407]="Ecoli-K12-W3110" [284812]="fission-yeast" [2697049]="SARS-CoV-2")
+taxid_dict=([9606]="human" [7227]="fly" [559292]="yeast" [3702]="arabidopsis" [6239]="C-elegans" [316407]="Ecoli-K12-W3110" [284812]="fission-yeast" [2697049]="SARS-CoV-2")
 
 # Download fasta files from uniprot
 for id in "${!taxid_dict[@]}"
