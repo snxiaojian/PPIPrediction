@@ -1,6 +1,8 @@
 import json
 from collections import defaultdict
-
+import sys
+sys.path.append("./")
+from ppi_network.static_args import *
 
 class BioGridParser(object):
     def __init__(self, tab_file: str, map_file: str, taxon: str):
@@ -12,16 +14,7 @@ class BioGridParser(object):
     def parsed_network(species):
         tab2_file = "./data/biogrid/BIOGRID-ALL-4.4.214.tab2.txt"
         mapping_file = "./data/biogrid/UNIPROT.tab.txt"
-        if species == "human":
-            taxon = "9606"
-        elif species == "fly":
-            taxon = "7227"
-        elif species == "yeast":
-            taxon = "559292"
-        elif species == "arabidopsis":
-            taxon = "3702"
-        else:
-            raise ValueError("Species not supported")
+        taxon = str(taxid_dict[species])
         parser = BioGridParser(tab2_file, mapping_file, taxon)
         return parser.network, parser.ppi_count
 

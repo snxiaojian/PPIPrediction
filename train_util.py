@@ -47,3 +47,16 @@ def write_acc_to_file(model_dir, epoch ,total_labels, total_preds, acc, avg_loss
     print("acc: ",test_acc," ; prec: ",test_prec," ; recall: ",test_recall," ; f1: ",test_f1," ; auc: ",test_auc," ; spec:",test_spec," ; mcc: ",test_mcc)
     with open(model_dir + "result.txt", 'a+') as fp:
         fp.write('epoch:' + str(epoch+1) + '\ttrainacc=' + str(acc) +'\ttrainloss=' + str(avg_loss.item()) +'\tacc=' + str(test_acc) + '\tprec=' + str(test_prec) + '\trecall=' + str(test_recall) +  '\tf1=' + str(test_f1) + '\tauc=' + str(test_auc) + '\tspec='+str(test_spec)+ '\tmcc='+str(test_mcc)+'\n')
+        
+def write_test_result_to_file(model_dir, species ,total_labels, total_preds):
+    test_acc = accuracy_score(total_labels, total_preds)
+    test_prec = precision_score(total_labels, total_preds)
+    test_recall = recall_score(total_labels, total_preds)
+    test_f1 = f1_score(total_labels, total_preds)
+    test_auc = roc_auc_score(total_labels, total_preds)
+    con_matrix = confusion_matrix(total_labels, total_preds)
+    test_spec = con_matrix[0][0]/(con_matrix[0][0]+con_matrix[0][1])
+    test_mcc = (con_matrix[0][0]*con_matrix[1][1]-con_matrix[0][1]*con_matrix[1][0])/(((con_matrix[1][1]+con_matrix[0][1])*(con_matrix[1][1]+con_matrix[1][0])*(con_matrix[0][0]+con_matrix[0][1])*(con_matrix[0][0]+con_matrix[1][0]))**0.5)
+    print("acc: ",test_acc," ; prec: ",test_prec," ; recall: ",test_recall," ; f1: ",test_f1," ; auc: ",test_auc," ; spec:",test_spec," ; mcc: ",test_mcc)
+    with open(model_dir + "test_result.txt", 'a+') as fp:
+        fp.write('species:' + species + '\tnum=' + str(len(total_labels)) +  '\tacc=' + str(test_acc) + '\tprec=' + str(test_prec) + '\trecall=' + str(test_recall) +  '\tf1=' + str(test_f1) + '\tauc=' + str(test_auc) + '\tspec='+str(test_spec)+ '\tmcc='+str(test_mcc)+'\n')

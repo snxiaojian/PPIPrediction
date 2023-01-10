@@ -90,7 +90,8 @@ class PSSMGenerator:
         '''
         fasta_path = self.fasta_file_path(record)
         pssm_file_path = self.pssm_file_path(record)
-        print("generating: " + pssm_file_path)
+        sequence_len = len(record.seq._data)
+        print("generating: " + pssm_file_path + " for sequence length: " + str(sequence_len))
         cmd = 'psiblast -query '+ fasta_path + ' -db ' + PSSMGenerator.db_folder  + ' -evalue 0.001  -num_threads 1 -num_iterations 3 -out_ascii_pssm ' + pssm_file_path  + " > /dev/null 2>&1"
         print("executing " + cmd)
         statu = os.system(cmd)
@@ -107,6 +108,7 @@ class PSSMGenerator:
             pssm_file_path = self.pssm_file_path(record)
             if not os.path.exists(pssm_file_path):
                 recordNeedProcess.append(record)
+        print("need process " + str(len(recordNeedProcess)) + " records for species " + self.species)
         with ProcessPoolExecutor() as pool:
             pool.map(self.process_with_record,recordNeedProcess, chunksize=6)
 
@@ -115,7 +117,7 @@ if __name__ == "__main__":
     folder = "./data/input/"
     files = get_fasta_names_from_folder(folder)
     for file in files:
-        print("processing " + file)
-        pssm_generator = PSSMGenerator(folder + file, file.split(".")[0])
-        pssm_generator.generate()
+            print("processing " + file)
+            pssm_generator = PSSMGenerator(folder + file, file.split(".")[0])
+            pssm_generator.generate()
     

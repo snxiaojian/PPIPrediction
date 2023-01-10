@@ -7,7 +7,7 @@ from data_process.util import records_from_filtered_input
 from ppi_network.ProteinFeatureLoader import ProteinFeatureLoader
 from ppi_network.static_args import *
 
-h5file_folder = "./data/h5file/"
+h5file_folder = "./tensor/h5file/"
 h5file =  h5file_folder + feature_type_residue_pssm + ".h5"
 
 def key(pid,type,num_pick):

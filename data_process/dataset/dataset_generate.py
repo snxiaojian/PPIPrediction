@@ -130,7 +130,39 @@ def generate_dateset(feature_type):
     write_ppi_to_tsv(train_dataset, "train_"+ feature_type)
     write_ppi_to_tsv(test_dataset, "test_"+ feature_type)
     
+def generate_dataset_for_species(feature_type):
+    folder = fasta_folder_from_feature_type(feature_type)
+    positive_ppi = []
+    negative_ppi = []
+    informations = []
+    for species in test_other_species:
+        file = folder + species + ".fasta"
+        print("processing " + file)
+        biogrid_network, ppi_count = BioGridParser.parsed_network(species=species)
+        information = "total biogrid: " + species + " ppi count: " + str(ppi_count) + "\n"
+        print(information)
+        informations.append(information)
+        
+        ratio = negative_ratio_for_species(species, ppi_count)
+        ratio = min(ratio, 1)
+        information = "negative ratio for " + species + ": " + str(ratio) + "\n"
+        print(information)
+        informations.append(information)
+        recordIDs = recordIDs_for_file(file)
+        positive_ppi_in_species, negative_ppi_in_species = generate_ppi(ratio, biogrid_network, recordIDs)
+        information = "positive ppi count for " + species + ": " + str(len(positive_ppi_in_species)) + "\n"
+        print(information)
+        informations.append(information)
+        information = "negative ppi count for " + species + ": " + str(len(negative_ppi_in_species)) + "\n"
+        print(information)
+        informations.append(information)
+        positive_ppi.extend(positive_ppi_in_species)
+        negative_ppi.extend(negative_ppi_in_species)
+        write_infomation_to_file(informations, "./data/dataset/informations_" + species + "_" + feature_type + ".txt")
+        write_ppi_to_tsv(positive_ppi+negative_ppi, "whole_" + species + "_" + feature_type)
+        
 if __name__ == "__main__":
-    generate_dateset(feature_type=feature_type_residue_pssm)
+    # generate_dateset(feature_type=feature_type_residue_pssm)
     # generate_dateset(feature_type=feature_type_go_graph_pssm)
     # generate_dateset(feature_type=feature_type_graph_pssm)
+    generate_dataset_for_species(feature_type_residue_pssm)

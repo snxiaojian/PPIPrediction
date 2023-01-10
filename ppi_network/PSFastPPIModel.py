@@ -5,9 +5,8 @@ from ppi_network.static_args import *
 
 class PSSFastPPIModel(torch.nn.Module):
 
-    def __init__(self, batch_size, device, pick_num):
+    def __init__(self, device, pick_num):
         super(PSSFastPPIModel,self).__init__()
-        self.batch_size = batch_size
         self.device = device
         self.pick_num = pick_num
         self.graph_embedding_size = residue_embedding_size
@@ -48,8 +47,9 @@ class PSSFastPPIModel(torch.nn.Module):
         output = torch.sigmoid(out)
         return output
     
-    def forward_part(self, residue_features):        
+    def forward_part(self, residue_features):
+        batch_size = residue_features.shape[0]        
         g_feature = self.relu(self.fc_g1(residue_features))
-        g_feature = g_feature.reshape(self.batch_size, -1)
+        g_feature = g_feature.reshape(batch_size, -1)
         g_feature = self.relu(self.fc_g2(g_feature))
         return g_feature

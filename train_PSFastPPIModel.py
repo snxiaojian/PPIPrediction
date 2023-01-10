@@ -6,7 +6,7 @@ import sys
 import datetime
 from train_util import *
 sys.path.append("./")
-from ppi_network.PPIDatasetFast import PPIDatasetFast, fast_no_go_collate
+from ppi_network.PPIDatasetFastH5 import PPIDatasetFastH5, fast_no_go_collate
 from ppi_network.PSFastPPIModel import PSSFastPPIModel
 from ppi_network.static_args import *
 
@@ -38,7 +38,7 @@ def train():
     drop_last = True
     pin_memory = True
     
-    train_dataset = PPIDatasetFast(type='train')
+    train_dataset = PPIDatasetFastH5(type='train')
     train_loader = DataLoader(dataset=train_dataset,
                batch_size=batch_size,
                shuffle=shuffle,
@@ -48,7 +48,7 @@ def train():
                pin_memory=pin_memory,
                collate_fn=fast_no_go_collate)
     
-    test_dataset = PPIDatasetFast(type='test')
+    test_dataset = PPIDatasetFastH5(type='test')
     test_loader = DataLoader(dataset=test_dataset,
                batch_size=batch_size,
                shuffle=shuffle,
