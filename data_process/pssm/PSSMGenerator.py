@@ -71,14 +71,14 @@ class PSSMGenerator:
                 line = f.readline()
                 pssm_np = PSSMGenerator.get_line_numpy( line )
                 line = f.readline()
-                while line != '\n' :
+                while line != '\n' and line != '':
                     pssm_np = np.vstack( [pssm_np , PSSMGenerator.get_line_numpy( line )] )
                     line = f.readline()
             else:
                 line = f.readline()
                 pssm_np = PSSMGenerator.get_line_numpy( line ,10,69,3)
                 line = f.readline()
-                while line != '\n' :
+                while line != '\n' and line != '' :
                     pssm_np = np.vstack( [pssm_np , PSSMGenerator.get_line_numpy( line ,10,69,3)] )
                     line = f.readline()
             f.close()
@@ -114,10 +114,12 @@ class PSSMGenerator:
 
 
 if __name__ == "__main__":
-    folder = "./data/input/"
-    files = get_fasta_names_from_folder(folder)
-    for file in files:
-            print("processing " + file)
-            pssm_generator = PSSMGenerator(folder + file, file.split(".")[0])
-            pssm_generator.generate()
+    pssm = PSSMGenerator.readFromPSSM("./data/pssm/mouse/O08550.pssm")
+    print(pssm)
+    # folder = "./data/input/"
+    # files = get_fasta_names_from_folder(folder)
+    # for file in files:
+    #         print("processing " + file)
+    #         pssm_generator = PSSMGenerator(folder + file, file.split(".")[0])
+    #         pssm_generator.generate()
     

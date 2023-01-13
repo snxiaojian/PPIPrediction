@@ -14,7 +14,7 @@ feature_type_residue_pssm = "feature_type_residue_pssm"
 
 train_species = ["arabidopsis", "fly", "human", "yeast"]
 
-test_other_species = ["C-elegans", "mouse", "fission-yeast", "rice"]
+test_other_species = ["C-elegans", "mouse", "fission-yeast"]
 
 reason_species = ["NDH108"]
 
@@ -24,6 +24,5 @@ taxid_dict={"human": 9606,
             "arabidopsis":3702,
             "C-elegans":6239,
             "fission-yeast":284812,
-            "mouse":10090,
-            "rice": 39947
+            "mouse":10090
             }

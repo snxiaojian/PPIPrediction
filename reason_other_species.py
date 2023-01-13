@@ -7,7 +7,7 @@ import csv
 from train_util import *
 sys.path.append("./")
 from ppi_network.ReasonDatasetFastH5 import ReasonDatasetFastH5, fast_no_go_collate, pairs_for_index
-from ppi_network.PSFastPPIModel import PSSFastPPIModel
+from ppi_network.PSFastPPIModel import PSFastPPIModel
 from ppi_network.static_args import *
 from data_process.util import fasta_folder_from_feature_type, id_from_record
 
@@ -55,7 +55,7 @@ def reason(species):
                pin_memory=pin_memory,
                collate_fn=fast_no_go_collate)
     
-    model = PSSFastPPIModel(batch_size=batch_size, device=device, pick_num=pick_num).to(device=device)
+    model = PSFastPPIModel(device=device, pick_num=pick_num).to(device=device)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
     newest_model_path = find_newest_model(model_dir())

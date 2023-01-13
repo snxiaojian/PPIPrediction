@@ -30,15 +30,15 @@ class ResiduePicker:
     def pick_residue(self, number: int):
         zeroes = [-200000] * number
         residues = []
-        
-        if len(self.sequence) < number:
+        length = min(len(self.sequence), self.pssm.shape[0])
+        if length < number:
             for i in range(len(self.sequence)):
                 residues.append(Residue(i, self.sequence[i], self.pssm[i]))
             residues.sort(key=lambda x: x.current_value)
             result = [r.location for r in residues] + zeroes[len(residues):number]
             return result
         else:
-            for i in range(len(self.sequence)):
+            for i in range(length):
                 residues.append(Residue(i, self.sequence[i], self.pssm[i]))
 
             residues.sort(key=lambda x: x.current_value)

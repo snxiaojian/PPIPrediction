@@ -3,10 +3,10 @@ import torch.nn.functional as F
 import random
 from ppi_network.static_args import *
 
-class PSSFastPPIModel(torch.nn.Module):
+class PSFastPPIModel(torch.nn.Module):
 
     def __init__(self, device, pick_num):
-        super(PSSFastPPIModel,self).__init__()
+        super(PSFastPPIModel,self).__init__()
         self.device = device
         self.pick_num = pick_num
         self.graph_embedding_size = residue_embedding_size

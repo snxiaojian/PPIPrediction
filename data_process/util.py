@@ -37,3 +37,15 @@ def records_from_filtered_input(feat_type):
             records[id_from_record(record)] = record
             species_dict[id_from_record(record)] = species
     return records, species_dict
+
+def records_from_test_input(feat_type):
+    fasta_folder = fasta_folder_from_feature_type(feat_type)
+    records = {}
+    species_dict = {}
+    for file in get_fasta_names_from_folder(fasta_folder):
+        species = file.split(".")[0]
+        if species in test_other_species:
+            for record in SeqIO.parse(fasta_folder + file, "fasta"):
+                records[id_from_record(record)] = record
+                species_dict[id_from_record(record)] = species
+    return records, species_dict

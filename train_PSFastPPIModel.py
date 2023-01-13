@@ -7,7 +7,7 @@ import datetime
 from train_util import *
 sys.path.append("./")
 from ppi_network.PPIDatasetFastH5 import PPIDatasetFastH5, fast_no_go_collate
-from ppi_network.PSFastPPIModel import PSSFastPPIModel
+from ppi_network.PSFastPPIModel import PSFastPPIModel
 from ppi_network.static_args import *
 
 def predicting(model, loader):
@@ -57,7 +57,7 @@ def train():
                pin_memory=pin_memory,
                collate_fn=fast_no_go_collate)
     
-    model = PSSFastPPIModel(batch_size=batch_size, device=device, pick_num=pick_num).to(device=device)
+    model = PSFastPPIModel(device=device, pick_num=pick_num).to(device=device)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     criterion = torch.nn.BCELoss()
     

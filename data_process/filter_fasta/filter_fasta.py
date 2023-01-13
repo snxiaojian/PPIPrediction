@@ -7,6 +7,7 @@ sys.path.append("./")
 from data_process.util import get_fasta_names_from_folder, id_from_record, gene_from_record, fasta_folder_from_feature_type
 from go_rgcn.GOAParser import GOAParser
 from ppi_network.static_args import *
+from data_process.pssm.PSSMGenerator import PSSMGenerator
 
 def data_is_complete_and_correct(file, id, record):
     species = file.split(".")[0]
