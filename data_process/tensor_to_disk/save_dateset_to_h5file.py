@@ -41,14 +41,6 @@ def write_train_dataset_to_h5file():
     recordIDs, species_dict = records_from_filtered_input(feature_type_residue_pssm)
     write_records_to_disk(recordIDs, species_dict, h5file)
     
-def write_test_dataset_to_h5file(): 
-    if not os.path.exists(h5file_folder):
-        os.mkdir(h5file_folder)       
-    recordIDs, species_dict = records_from_test_input(feature_type_residue_pssm)
-    # recordIDs = ['O08550']
-    # species_dict = {"O08550": "mouse"}
-    write_records_to_disk(recordIDs, species_dict, test_h5file)
-    
 def test_read():
     with h5py.File(h5file, 'r') as f:
         for species in f.keys():
@@ -58,5 +50,4 @@ def test_read():
                 value = dset[key][:]
                 print(value)
 if __name__ == "__main__":
-    # write_train_dataset_to_h5file()
-    write_test_dataset_to_h5file()
+    write_train_dataset_to_h5file()

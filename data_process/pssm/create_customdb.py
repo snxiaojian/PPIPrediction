@@ -7,6 +7,8 @@ from data_process.util import get_fasta_names_from_folder
 
 if __name__ == '__main__':
     folder = './data/customdb/'
+    if not os.path.exists(folder):
+        os.mkdir(folder)
     files = get_fasta_names_from_folder(folder)
 
     ids = set()
