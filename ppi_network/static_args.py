@@ -14,7 +14,6 @@ feature_type_residue_pssm = "feature_type_residue_pssm"
 
 train_species = ["arabidopsis", "fly", "human", "yeast"]
 
-test_other_species = ["C-elegans", "mouse", "fission-yeast"]
 
 reason_species = ["NDH108"]
 

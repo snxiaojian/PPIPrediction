@@ -112,7 +112,6 @@ class PSSMGenerator:
         with ProcessPoolExecutor() as pool:
             pool.map(self.process_with_record,recordNeedProcess, chunksize=6)
 
-
 if __name__ == "__main__":
     folder = "./data/input/"
     files = get_fasta_names_from_folder(folder)
