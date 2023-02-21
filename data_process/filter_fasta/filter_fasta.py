@@ -31,6 +31,10 @@ def data_has_pssm(file, id, record):
     if not os.path.exists(pssm_file):
         print("dont' have pssm")
         return False
+    # file is empty
+    if os.stat(pssm_file).st_size == 0:
+        print("pssm is empty")
+        return False
     acids = {'A','C','D','E','F','G','H','I','K','L','M','N','P','Q','R','S','T','V','W','Y'}
     if not set(record.seq._data).issubset(acids):
         return False

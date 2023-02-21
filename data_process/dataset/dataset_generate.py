@@ -55,8 +55,9 @@ def negative_ratio_for_species(species, ppi_count):
     if not os.path.exists(file):
         raise ValueError("Species not supported")
     protein_num = len([1 for line in open(file) if line.startswith(">")])
-    negative_ppi_ratio =  math.pow(protein_num, 2) / (ppi_count * 2 * 1000 * 3)
-    return negative_ppi_ratio
+    negative_ppi_ratio = math.pow(protein_num, 2) / (ppi_count * 2)
+    negative_ppi_safe_ratio =  math.pow(protein_num, 2) / (ppi_count * 2 * 1000 * 3)
+    return negative_ppi_safe_ratio
 
 def write_ppi_to_tsv(ppi_items, type):
     file = "./data/dataset/" + type + "_ppi.tsv"

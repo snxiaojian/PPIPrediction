@@ -3,13 +3,12 @@ import os
 from Bio import SeqIO
 import sys
 sys.path.append("./")
-from data_process.util import records_from_filtered_input,records_from_test_input
+from data_process.util import records_from_filtered_input
 from ppi_network.ProteinFeatureLoader import ProteinFeatureLoader
 from ppi_network.static_args import *
 
 h5file_folder = "./tensor/h5file/"
 h5file =  h5file_folder + feature_type_residue_pssm + ".h5"
-test_h5file =  h5file_folder + "test_other_species_" + feature_type_residue_pssm + ".h5"
 
 def key(pid,type,num_pick):
     return "pid:"+pid+"type:"+type+"picknum:"+str(num_pick)
@@ -30,6 +29,7 @@ def write_records_to_disk(recordIDs, species_dict, file):
     with h5py.File(file, 'w') as f:
         for species in set(species_dict.values()):
             f.create_group(species)
+            print("created group %s" % species)
         for index, pid in enumerate(recordIDs):
             species = species_dict[pid]
             group = f[species]
