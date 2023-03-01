@@ -15,7 +15,7 @@ def fast_no_go_collate(samples):
     return residue_with_pssm, residue_with_pssm2, torch.FloatTensor(labels)            
 
 class PPIDatasetFastH5(Dataset):
-    def __init__(self,type):
+    def __init__(self,type, target_species = None):
         
         super(PPIDatasetFastH5,self).__init__()
         _, species_dict = records_from_filtered_input(feature_type_residue_pssm)
@@ -27,7 +27,9 @@ class PPIDatasetFastH5(Dataset):
                 line = line.strip('\n')
                 line = line.rstrip('\n')
                 words = re.split(' |\t',line)
-                ppi_items.append((words[0],words[1],int(words[2])))
+                species = self.species_dict[words[0]]
+                if target_species is None or species == target_species:
+                    ppi_items.append((words[0],words[1],int(words[2])))
                 
         self.ppi_items = ppi_items
 

@@ -2,9 +2,9 @@
 Please read envirment.txt
 ### Date prepare
 #### Download species fasta file for training and test
-sh ./data_process/fasta/collect_fasta.sh
+bash ./data_process/fasta/collect_fasta.sh
 #### Download custom database for BLAST
-sh ./data_process/pssm/prepare_database.sh
+bash ./data_process/pssm/prepare_database.sh
 #### Create custom database
 python ./data_process/pssm/create_customdb.py
 #### Generate PSSM file
@@ -13,5 +13,7 @@ python ./data_process/pssm/PSSMGenerator.py
 python ./data_process/residue_feature_generate.py
 #### Filter input fasta files
 pthon ./data_process/filter_fasta.py
+#### download PPI data from bioGRID
+bash ./data_process/biogrid/download_ppi
 #### Generate dataset
 python ./data_process/generate_dataset.py

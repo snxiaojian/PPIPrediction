@@ -4,7 +4,7 @@ if [ ! -f "./data/customdb/uniprot_sprot.fasta" ]; then
 fi
 # query in https://www.ncbi.nlm.nih.gov/taxonomy
 declare -A taxid_dict
-taxid_dict=([9606]="human" [7227]="fly" [559292]="yeast" [3702]="arabidopsis" [6239]="C-elegans" [284812]="fission-yeast" [39947]="rice" [4577]="maize" [3818]="peanut", [10090]="mouse")
+taxid_dict=([9606]="human" [7227]="fly" [559292]="yeast" [3702]="arabidopsis" [6239]="C-elegans" [284812]="fission-yeast" [39947]="rice" [4577]="maize" [3818]="peanut" [10090]="mouse")
 
 # Download fasta files from uniprot
 for id in "${!taxid_dict[@]}"
