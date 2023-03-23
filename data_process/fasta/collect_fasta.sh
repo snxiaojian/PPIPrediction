@@ -1,5 +1,5 @@
 declare -A taxid_dict
-taxid_dict=([9606]="human" [7227]="fly" [559292]="yeast" [3702]="arabidopsis" [10090]="mouse")
+taxid_dict=([9606]="human" [7227]="fly" [559292]="yeast" [3702]="arabidopsis")
 
 # [6239]="C-elegans" [10090]="mouse" [284812]="fission-yeast"
 # Download fasta files from uniprot

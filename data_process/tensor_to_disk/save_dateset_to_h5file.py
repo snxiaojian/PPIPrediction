@@ -18,8 +18,8 @@ def process(pid, index, loader, group):
     keystr = key(pid,feature_type_residue_pssm,pick_num_fast)
     
     group.create_dataset(keystr, data=residue_with_pssm.tolist())
-    # if index%100 == 0:
-    print("processed %d" % index)
+    if index%100 == 0:
+        print("processed %d" % index)
     
         
 def write_records_to_disk(recordIDs, species_dict, file):

@@ -106,7 +106,7 @@ def train():
         
         # test
         total_labels,total_preds = predicting(model,test_loader)
-        write_acc_to_file(model_dir(), epoch, total_labels, total_preds, acc, avg_loss)
+        write_acc_to_file(model_dir(), epoch, total_labels, total_preds, acc.data, avg_loss)
 
 if __name__ == "__main__":
     train()
