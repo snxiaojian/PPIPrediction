@@ -34,7 +34,7 @@ def train_test_indicator_for_species(test_species, epoch):
     shuffle = False
     batch_size = 5000
     pick_num = pick_num_fast
-    workers = 4
+    workers = 1
     drop_last = False
     pin_memory = True
     
