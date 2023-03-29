@@ -17,6 +17,8 @@ class TrainingHistory:
         self.auc = float(line.split()[8].split('=')[1])
         self.spec = float(line.split()[9].split('=')[1])
         self.mcc = float(line.split()[10].split('=')[1])
+        self.data = {'acc': self.acc, 'prec': self.prec, 'recall': self.recall, 'f1': self.f1, 'auc': self.auc, 'spec': self.spec, 'mcc': self.mcc}
+
 
 def get_training_history(model_dir):
     history_file = model_dir + 'train_epoch_result.txt'
@@ -28,34 +30,47 @@ def get_training_history(model_dir):
 def filter_histories_by_species(histories, species, mode):
     return [h for h in histories if h.species == species and h.mode == mode]
 
-def show_training_history(training_histories):
-    mode = "train"
+def show_training_history(ax,training_histories, key, yLabel, mode):
     human_histories = filter_histories_by_species(training_histories, 'human', mode)
     yeast_histories = filter_histories_by_species(training_histories, 'yeast', mode)
     fly_histories = filter_histories_by_species(training_histories, 'fly', mode)
     arabidopsis_histories = filter_histories_by_species(training_histories, 'arabidopsis', mode)
     all_histories = filter_histories_by_species(training_histories, 'all', mode)
-    human_acc = [h.acc for h in human_histories]
-    yeast_acc = [h.acc for h in yeast_histories]
-    fly_acc = [h.acc for h in fly_histories]
-    arabidopsis_acc = [h.acc for h in arabidopsis_histories]
-    all_acc = [h.acc for h in all_histories]
+    human_acc = [h.data[key] for h in human_histories]
+    yeast_acc = [h.data[key] for h in yeast_histories]
+    fly_acc = [h.data[key] for h in fly_histories]
+    arabidopsis_acc = [h.data[key] for h in arabidopsis_histories]
+    all_acc = [h.data[key] for h in all_histories]
     
     lineStyle = "-"
-    plt.plot(human_acc, linestyle=lineStyle, color='b')
-    plt.plot(yeast_acc, linestyle=lineStyle, color='r')
-    plt.plot(fly_acc, linestyle=lineStyle, color='y')
-    plt.plot(arabidopsis_acc, linestyle=lineStyle, color='g')
-    plt.plot(all_acc, linestyle=lineStyle, color='k')
+    marker = 'o'
+    marker_size = 2
+    ax.plot(human_acc, color='b',linestyle=lineStyle, marker=marker, markersize=marker_size)
+    ax.plot(yeast_acc, linestyle=lineStyle, color='r', marker=marker, markersize=marker_size)
+    ax.plot(fly_acc, linestyle=lineStyle, color='y',marker=marker, markersize=marker_size)
+    ax.plot(arabidopsis_acc, linestyle=lineStyle, color='g', marker=marker, markersize=marker_size)
+    ax.plot(all_acc, linestyle=lineStyle, color='k', marker=marker, markersize=marker_size)
     # 显示图的标题
-    plt.title('Training accuracy history')
+    ax.set_title("Training "+ yLabel +" History")
     # 显示x轴标签epoch
-    plt.xlabel('epoch')
+    ax.set_xlabel('epoch')
     # 显示y轴标签train
-    plt.ylabel('train_acc')
+    ax.set_ylabel(yLabel)
     # 设置图例是显示'train','validation',位置在右下角
-    plt.legend(['human', 'yeast', "fly", "arabidopsis", "all"], loc='lower right')
-    # 开始绘图
-    # plt.show()
-    plt.savefig('foo.png')
-show_training_history(get_training_history('./data/PSFastPPIModels/'))
+    ax.legend(['human', 'yeast', "fly", "arabidopsis", "all"], loc='lower right')
+
+def plot(mode):
+    fig,axes = plt.subplots(nrows=2, ncols=2, figsize=(12, 12), dpi=100)
+    ax1=axes[0,0]
+    ax2=axes[0,1]
+    ax3=axes[1,0]
+    ax4=axes[1,1]
+    show_training_history(ax1,get_training_history('./data/PSFastPPIModels/'), 'acc', 'Accuracy', mode=mode)
+    show_training_history(ax2,get_training_history('./data/PSFastPPIModels/'), 'prec', 'Precision', mode=mode)
+    show_training_history(ax3,get_training_history('./data/PSFastPPIModels/'), 'recall', 'Recall', mode=mode)
+    show_training_history(ax4,get_training_history('./data/PSFastPPIModels/'), 'f1', 'F1-Score', mode=mode)
+
+    fig.subplots_adjust(hspace=0.4, wspace=0.3)
+    plt.savefig(mode+'.png')
+plot("train")
+plot("test")
