@@ -9,6 +9,7 @@ sys.path.append("./")
 from ppi_network.PPIDatasetFastH5 import PPIDatasetFastH5, fast_no_go_collate
 from ppi_network.PSFastPPIModel import PSFastPPIModel
 from ppi_network.static_args import *
+torch.multiprocessing.set_sharing_strategy('file_system')
 
 def predicting(model, loader):
     model.eval()
@@ -32,11 +33,11 @@ def model_dir():
 
 def train():
     shuffle = False
-    batch_size = 5000
+    batch_size = 10000
     pick_num = pick_num_fast
-    workers = 4
-    drop_last = True
-    pin_memory = True
+    workers = 2
+    drop_last = False
+    pin_memory = False
     
     train_dataset = PPIDatasetFastH5(type='train')
     train_loader = DataLoader(dataset=train_dataset,
