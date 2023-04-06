@@ -10,16 +10,7 @@ class Residue:
         self.acid = acid
         self.pssm_row = pssm_row
         self.acid_list = ["A", "R", "N", "D", "C", "Q", "E", "G", "H", "I", "L", "K", "M", "F", "P", "S", "T", "W", "Y", "V"]
-        self.best_value = max(self.pssm_row)
         self.current_value = self.pssm_row[self.acid_list.index(self.acid)]
-    
-    
-    def is_the_best_acid(self):
-        return self.acid == self.best_acid()
-        
-    def best_acid(self):
-        best_acid_index = self.pssm_row.index(self.best_value)
-        return self.acid_list[best_acid_index]
     
 class ResiduePicker:
     def __init__(self,record, pssm):

@@ -12,7 +12,7 @@ class BioGridParser(object):
 
     @staticmethod
     def parsed_network(species):
-        tab2_file = "./data/biogrid/BIOGRID-ALL-4.4.214.tab2.txt"
+        tab2_file = "./data/biogrid/BIOGRID-ALL-4.4.220.tab2.txt"
         mapping_file = "./data/biogrid/UNIPROT.tab.txt"
         taxon = str(taxid_dict[species])
         parser = BioGridParser(tab2_file, mapping_file, taxon)

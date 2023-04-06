@@ -71,21 +71,18 @@ def write_infomation_to_file(information, file):
         f.writelines(information)
         print("appending to " + file)
 
-def generate_dateset(feature_type, for_species):
-    dataset_folder = "./data/dataset1/"
+def generate_dateset(feature_type):
+    dataset_folder = "./data/dataset/"
     if not os.path.exists(dataset_folder):
         os.mkdir(dataset_folder)
     fasta_folder = fasta_folder_from_feature_type(feature_type)
     files = get_fasta_names_from_folder(fasta_folder)
-    train_test_ratio = 0.8
-    train_positive_ppi = []
-    train_negative_ppi = []
-    test_positive_ppi = []
-    test_negative_ppi = []
+    positive_ppi = []
+    negative_ppi = []
     informations = []
     for file in files:
         species = file.split(".")[0]
-        if species not in for_species:
+        if species not in train_species:
             print("ignoring " + file)
             continue
         print("processing " + file)
@@ -96,6 +93,7 @@ def generate_dateset(feature_type, for_species):
         
         ratio = negative_ratio_for_species(species, ppi_count)
         ratio = min(ratio, 7)
+        ratio = max(ratio, 0.1)
         information = "negative ratio for " + species + ": " + str(ratio) + "\n"
         print(information)
         informations.append(information)
@@ -108,23 +106,21 @@ def generate_dateset(feature_type, for_species):
         information = "negative ppi count for " + species + ": " + str(len(negative_ppi_in_species)) + "\n"
         print(information)
         informations.append(information)
-
-        random.shuffle(positive_ppi_in_species)
-        random.shuffle(negative_ppi_in_species)
-        positive_ppi_count = len(positive_ppi_in_species)
-        split_in_positive = int(positive_ppi_count*train_test_ratio)
-        split_in_negative = int(len(negative_ppi_in_species) - positive_ppi_count * (1-train_test_ratio))
-        
-        train_positive_ppi_in_species = positive_ppi_in_species[:split_in_positive]
-        train_negative_ppi_in_species = negative_ppi_in_species[:split_in_negative]
-        test_positive_ppi_in_species = positive_ppi_in_species[split_in_positive:]
-        test_negative_ppi_in_species = negative_ppi_in_species[split_in_negative:]
-        
-        train_positive_ppi += train_positive_ppi_in_species
-        train_negative_ppi += train_negative_ppi_in_species
-        test_positive_ppi += test_positive_ppi_in_species
-        test_negative_ppi += test_negative_ppi_in_species
-    write_ppi_to_tsv(train_positive_ppi+train_negative_ppi+test_positive_ppi+test_negative_ppi, "whole_"+ feature_type)
+        positive_ppi.extend(positive_ppi_in_species)
+        negative_ppi.extend(negative_ppi_in_species)
+    write_ppi_to_tsv(positive_ppi+negative_ppi, "whole_"+ feature_type)
+    
+    train_test_ratio = 0.8
+    random.shuffle(positive_ppi)
+    random.shuffle(negative_ppi)
+    positive_ppi_count = len(positive_ppi)
+    split_in_positive = int(positive_ppi_count*train_test_ratio)
+    split_in_negative = int(len(negative_ppi) - positive_ppi_count * (1-train_test_ratio))
+    
+    train_positive_ppi = positive_ppi[:split_in_positive]
+    train_negative_ppi = negative_ppi[:split_in_negative]
+    test_positive_ppi = positive_ppi[split_in_positive:]
+    test_negative_ppi = negative_ppi[split_in_negative:]
     
     train_dataset = train_positive_ppi + train_negative_ppi
     test_dataset = test_positive_ppi + test_negative_ppi
@@ -141,6 +137,6 @@ def generate_dateset(feature_type, for_species):
     
         
 if __name__ == "__main__":
-    generate_dateset(feature_type=feature_type_residue_pssm, for_species=["arabidopsis", "fly"])
+    generate_dateset(feature_type=feature_type_residue_pssm)
     # generate_dateset(feature_type=feature_type_go_graph_pssm)
     # generate_dateset(feature_type=feature_type_graph_pssm)
