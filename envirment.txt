@@ -1,7 +1,7 @@
 from https://pytorch.org/ 
-conda install pytorch torchvision torchaudio cudatoolkit=11.6 -c pytorch -c conda-forge
+conda install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvidia
 from https://www.dgl.ai/pages/start.html
-conda install -c dglteam dgl-cuda11.6
+conda install -c dglteam dgl-cuda11.8
 
 conda install tensorflow
 conda install gensim

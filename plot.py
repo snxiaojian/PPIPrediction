@@ -51,7 +51,8 @@ def show_training_history(ax,training_histories, key, yLabel, mode):
     ax.plot(arabidopsis_acc, linestyle=lineStyle, color='g', marker=marker, markersize=marker_size)
     ax.plot(all_acc, linestyle=lineStyle, color='k', marker=marker, markersize=marker_size)
     # 显示图的标题
-    ax.set_title("Training "+ yLabel +" History")
+    title = mode.capitalize() + "ing " + yLabel + " History"
+    ax.set_title(title)
     # 显示x轴标签epoch
     ax.set_xlabel('epoch')
     # 显示y轴标签train

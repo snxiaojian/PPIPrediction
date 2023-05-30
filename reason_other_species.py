@@ -6,7 +6,7 @@ import numpy
 import csv
 from train_util import *
 sys.path.append("./")
-from ppi_network.ReasonDatasetFastH5 import ReasonDatasetFastH5, fast_no_go_collate, pairs_for_index
+from ppi_network.ReasonDatasetFastH5 import ReasonDatasetFastH5, fast_no_go_collate
 from ppi_network.PSFastPPIModel import PSFastPPIModel
 from ppi_network.static_args import *
 from data_process.util import fasta_folder_from_feature_type, id_from_record
@@ -68,4 +68,4 @@ def reason(species):
 
 
 if __name__ == "__main__":
-    reason("NDH108")
+    reason("arabidopsis")

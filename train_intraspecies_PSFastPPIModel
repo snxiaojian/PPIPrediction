@@ -28,10 +28,10 @@ def predicting(model, loader):
             
     return total_labels.numpy().flatten(),total_preds.numpy().flatten()
 
-def model_dir():
-    return './data/PSFastPPIModels/'
+def model_dir_for(target_species):
+    return './data/PSFastPPIModels_' + target_species + '/'
 
-def train():
+def train(target_species):
     shuffle = False
     batch_size = 5000
     pick_num = pick_num_fast
@@ -39,7 +39,7 @@ def train():
     drop_last = False
     pin_memory = False
     
-    train_dataset = PPIDatasetFastH5(type='train')
+    train_dataset = PPIDatasetFastH5(type='train', target_species = target_species)
     train_loader = DataLoader(dataset=train_dataset,
                batch_size=batch_size,
                shuffle=shuffle,
@@ -49,7 +49,7 @@ def train():
                pin_memory=pin_memory,
                collate_fn=fast_no_go_collate)
     
-    test_dataset = PPIDatasetFastH5(type='test')
+    test_dataset = PPIDatasetFastH5(type='test', target_species = target_species)
     test_loader = DataLoader(dataset=test_dataset,
                batch_size=batch_size,
                shuffle=shuffle,
@@ -62,10 +62,11 @@ def train():
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     criterion = torch.nn.BCELoss()
     
+    model_dir = model_dir_for(target_species)
     start_epoch = -1
-    newest_model_path = find_newest_model(model_dir())
+    newest_model_path = find_newest_model(model_dir)
     if newest_model_path != None:
-        checkpoint = torch.load(model_dir() + newest_model_path)
+        checkpoint = torch.load(model_dir + newest_model_path)
         model.load_state_dict(checkpoint['model_state_dict'])
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
         start_epoch = checkpoint['epoch']
@@ -103,11 +104,11 @@ def train():
         print("train avg_loss is",avg_loss)
         print("train ACC = ",acc)
         
-        save_model(model_dir(), epoch, model, optimizer)
+        save_model(model_dir, epoch, model, optimizer)
         
         # test
         total_labels,total_preds = predicting(model,test_loader)
-        write_acc_to_file(model_dir(), epoch, total_labels, total_preds, acc.data, avg_loss)
+        write_acc_to_file(model_dir, epoch, total_labels, total_preds, acc.data, avg_loss)
 
 if __name__ == "__main__":
-    train()
+    train("arabidopsis")
