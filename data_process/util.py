@@ -38,3 +38,15 @@ def records_from_filtered_input(feat_type):
             records[id_from_record(record)] = record
             species_dict[id_from_record(record)] = species
     return records, species_dict
+
+def records_from_fasta_file(file):
+    records = {}
+    for record in SeqIO.parse(file, "fasta"):
+        records[id_from_record(record)] = record
+    return records
+
+def ids_from_fasta_file(file):
+    ids = []
+    for record in SeqIO.parse(file, "fasta"):
+        ids.append(id_from_record(record))
+    return ids
