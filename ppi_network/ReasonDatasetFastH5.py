@@ -36,18 +36,20 @@ def pid_pairs_for(ids, predicting_index):
     return pid1, pid2
 
 class ReasonDatasetFastH5(Dataset):
-    def __init__(self,species):
+    def __init__(self,species, startIndex):
         super(ReasonDatasetFastH5,self).__init__()
         self.species = species
+        self.startIndex = startIndex
         self.default_loader = self.disk_loader
         folder = fasta_folder_from_feature_type(feature_type_residue_pssm)
         file = folder + species + ".fasta"
         self.records = records_from_fasta_file(file)
         self.ids = ids_from_fasta_file(file)
         self.proteinNum = len(self.ids)
-        self.lenth = int((self.proteinNum * (self.proteinNum - 1))/2)
+        self.lenth = int((self.proteinNum * (self.proteinNum - 1))/2) - startIndex
     
     def __getitem__(self, index):
+        index = index + self.startIndex
         pid1, pid2 = pid_pairs_for(self.ids, index)
         residue_features = self.default_loader(pid1) 
         residue_features2 = self.default_loader(pid2)

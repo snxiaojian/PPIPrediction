@@ -6,10 +6,11 @@ import numpy
 import csv
 from train_util import *
 sys.path.append("./")
-from ppi_network.ReasonDatasetFastH5 import ReasonDatasetFastH5, fast_no_go_collate, pid_pairs_for
+from ppi_network.ReasonDatasetFastH5 import ReasonDatasetFastH5, pid_pairs_for
 from ppi_network.PSFastPPIModel import PSFastPPIModel
 from ppi_network.static_args import *
 from data_process.util import *
+import time
 
 def reasoning(model, loader, ids, species):
     model.eval()
@@ -17,12 +18,13 @@ def reasoning(model, loader, ids, species):
     print('Make prediction for {} samples...'.format(len(loader.dataset)))
     file_name = model_dir() + "reason_result_" + species + "_ppi.tsv"
     if os.path.exists(file_name):
-        os.remove(file_name)
+        timestamp = time.strftime("%Y%m%d%H%M%S", time.localtime())
+        os.rename(file_name, file_name + timestamp)
     predicted_number = 0
     with torch.no_grad():
         with tqdm(loader, unit="batch") as tepoch:
             for residue_with_pssm, residue_with_pssm2 in tepoch:
-                output = model(toTensor(residue_with_pssm), toTensor(residue_with_pssm2))
+                output = model(residue_with_pssm.to(device), residue_with_pssm2.to(device))
                 write_result_to_local(output.cpu().numpy().flatten(), predicted_number, ids, file_name)
                 predicted_number = predicted_number + output.shape[0]
                 total_preds = torch.cat((total_preds.cpu(), output.cpu()), 0)
@@ -43,20 +45,19 @@ def reason(species):
     file = folder + species + ".fasta"
     ids = ids_from_fasta_file(file)
     shuffle = False
-    batch_size = 10000
+    batch_size = 20000
     pick_num = pick_num_fast
-    workers = 2
+    workers = 0
     drop_last = False
-    pin_memory = True
+    pin_memory = False
     
-    test_dataset = ReasonDatasetFastH5(species)
+    test_dataset = ReasonDatasetFastH5(species, startIndex=0)
     test_loader = DataLoader(dataset=test_dataset,
                batch_size=batch_size,
                shuffle=shuffle,
                drop_last=drop_last,
                num_workers=workers,
-               pin_memory=pin_memory,
-               collate_fn=fast_no_go_collate)
+               pin_memory=pin_memory)
 
     model_path = model_dir() + 'epoch' + "62" + '.pkl'
     model = PSFastPPIModel(device=device, pick_num=pick_num).to(device=device)
