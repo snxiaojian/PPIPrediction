@@ -37,12 +37,15 @@ def toTensor(list_of_tensors):
     return tensor_of_tensors.to(device)
 
 def write_acc_to_file(model_dir, epoch ,total_labels, total_preds, acc, avg_loss):
+
     test_acc = accuracy_score(total_labels, total_preds)
     test_prec = precision_score(total_labels, total_preds)
     test_recall = recall_score(total_labels, total_preds)
     test_f1 = f1_score(total_labels, total_preds)
     test_auc = roc_auc_score(total_labels, total_preds)
     con_matrix = confusion_matrix(total_labels, total_preds)
+    tn, fp, fn, tp = con_matrix.ravel()
+    print("tn: ",tn," ; fp: ",fp," ; fn: ",fn," ; tp: ",tp)
     test_spec = con_matrix[0][0]/(con_matrix[0][0]+con_matrix[0][1])
     test_mcc = matthews_corrcoef(con_matrix)
     print("acc: ",test_acc," ; prec: ",test_prec," ; recall: ",test_recall," ; f1: ",test_f1," ; auc: ",test_auc," ; spec:",test_spec," ; mcc: ",test_mcc)
@@ -56,6 +59,8 @@ def write_test_result_to_file(model_dir, species ,total_labels, total_preds):
     test_f1 = f1_score(total_labels, total_preds)
     test_auc = roc_auc_score(total_labels, total_preds)
     con_matrix = confusion_matrix(total_labels, total_preds)
+    tn, fp, fn, tp = con_matrix.ravel()
+    print("tn: ",tn," ; fp: ",fp," ; fn: ",fn," ; tp: ",tp)
     test_spec = con_matrix[0][0]/(con_matrix[0][0]+con_matrix[0][1])
     test_mcc = matthews_corrcoef(con_matrix)
     print("acc: ",test_acc," ; prec: ",test_prec," ; recall: ",test_recall," ; f1: ",test_f1," ; auc: ",test_auc," ; spec:",test_spec," ; mcc: ",test_mcc)

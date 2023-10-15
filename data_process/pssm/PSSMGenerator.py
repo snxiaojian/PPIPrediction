@@ -119,4 +119,7 @@ if __name__ == "__main__":
             print("processing " + file)
             pssm_generator = PSSMGenerator(folder + file, file.split(".")[0])
             pssm_generator.generate()
+    # file = "NDH108.fasta"
+    # pssm_generator = PSSMGenerator(folder + file, file.split(".")[0])
+    # pssm_generator.generate()
     

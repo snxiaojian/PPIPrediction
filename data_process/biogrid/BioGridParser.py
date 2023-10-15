@@ -3,6 +3,7 @@ from collections import defaultdict
 import sys
 sys.path.append("./")
 from ppi_network.static_args import *
+import csv
 
 class BioGridParser(object):
     def __init__(self, tab_file: str, map_file: str, taxon: str):
@@ -12,11 +13,28 @@ class BioGridParser(object):
 
     @staticmethod
     def parsed_network(species):
-        tab2_file = "./data/biogrid/BIOGRID-ALL-4.4.220.tab2.txt"
-        mapping_file = "./data/biogrid/UNIPROT.tab.txt"
-        taxon = str(taxid_dict[species])
-        parser = BioGridParser(tab2_file, mapping_file, taxon)
-        return parser.network, parser.ppi_count
+        if species == "NDH108":
+            # load csv 
+            network = defaultdict(dict)
+            existing_ppi = set()
+            with open("./data_process/dataset/HND108.csv", "r") as f:
+                reader = csv.reader(f)
+                for row in reader:
+                    protein_a = row[0]
+                    protein_b = row[1]
+                    if protein_a + protein_b in existing_ppi:
+                        continue
+                    existing_ppi.add(protein_a + protein_b)
+                    existing_ppi.add(protein_b + protein_a)
+                    network[protein_a][protein_b] = 1
+            ppi_count = len(existing_ppi)/2
+            return network, ppi_count
+        else:
+            tab2_file = "./data/biogrid/BIOGRID-ALL-4.4.220.tab2.txt"
+            mapping_file = "./data/biogrid/UNIPROT.tab.txt"
+            taxon = str(taxid_dict[species])
+            parser = BioGridParser(tab2_file, mapping_file, taxon)
+            return parser.network, parser.ppi_count
 
     def biogrid2uniprot(self, file_path):
         mapping = dict()

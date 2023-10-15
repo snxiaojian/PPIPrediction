@@ -12,7 +12,7 @@ feature_type_go_graph_pssm = "feature_type_go_graph_pssm"
 feature_type_graph_pssm = "feature_type__graph_pssm"
 feature_type_residue_pssm = "feature_type_residue_pssm"
 
-train_species = ["arabidopsis", "fly", "human", "yeast"]
+train_species = ["arabidopsis", "fly", "human", "yeast", "NDH108"]
 
 
 reason_species = ["NDH108"]

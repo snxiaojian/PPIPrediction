@@ -18,7 +18,7 @@ def recordIDs_for_file(file):
             recordIDs.append(id_from_record(record))
     return recordIDs
 
-def generate_ppi(ratio, biogrid_network, recordIDs):
+def generate_positive_PPI(species, biogrid_network, recordIDs):
     positive_ppi_item = []
     mutual_ppi_dict = defaultdict(dict)
     for ppi1, ppi2dict in biogrid_network.items():
@@ -31,6 +31,10 @@ def generate_ppi(ratio, biogrid_network, recordIDs):
                 mutual_ppi_dict[ppi2][ppi1] = 1
                 if len(positive_ppi_item) % 10000 == 0:
                     print("generating positive ppi index: " + str(len(positive_ppi_item)))
+    return positive_ppi_item, mutual_ppi_dict
+
+def generate_ppi(species, ratio, biogrid_network, recordIDs):
+    positive_ppi_item, mutual_ppi_dict = generate_positive_PPI(species, biogrid_network, recordIDs)
     negative_ppi_count = int(len(positive_ppi_item) * ratio)
     negative_ppi_item = []
 
@@ -57,6 +61,8 @@ def negative_ratio_for_species(species, ppi_count):
     protein_num = len([1 for line in open(file) if line.startswith(">")])
     negative_ppi_ratio = math.pow(protein_num, 2) / (ppi_count * 2)
     negative_ppi_safe_ratio =  math.pow(protein_num, 2) / (ppi_count * 2 * 1000)
+    if species == "NDH108":
+        return 7
     return negative_ppi_safe_ratio
 
 def write_ppi_to_tsv(ppi_items, type):
@@ -71,7 +77,7 @@ def write_infomation_to_file(information, file):
         f.writelines(information)
         print("appending to " + file)
 
-def generate_dateset(feature_type):
+def generate_dateset(feature_type, target_species=None):
     dataset_folder = "./data/dataset/"
     if not os.path.exists(dataset_folder):
         os.mkdir(dataset_folder)
@@ -83,6 +89,9 @@ def generate_dateset(feature_type):
     for file in files:
         species = file.split(".")[0]
         if species not in train_species:
+            print("ignoring " + file)
+            continue
+        if target_species != None and species != target_species:
             print("ignoring " + file)
             continue
         print("processing " + file)
@@ -99,7 +108,7 @@ def generate_dateset(feature_type):
         informations.append(information)
         recordIDs = recordIDs_for_file(fasta_folder+"/"+file)
 
-        positive_ppi_in_species, negative_ppi_in_species = generate_ppi(ratio, biogrid_network, recordIDs)
+        positive_ppi_in_species, negative_ppi_in_species = generate_ppi(species, ratio, biogrid_network, recordIDs)
         information = "positive ppi count for " + species + ": " + str(len(positive_ppi_in_species)) + "\n"
         print(information)
         informations.append(information)
@@ -137,6 +146,6 @@ def generate_dateset(feature_type):
     
         
 if __name__ == "__main__":
-    generate_dateset(feature_type=feature_type_residue_pssm)
+    generate_dateset(feature_type=feature_type_residue_pssm, target_species="NDH108")
     # generate_dateset(feature_type=feature_type_go_graph_pssm)
     # generate_dateset(feature_type=feature_type_graph_pssm)

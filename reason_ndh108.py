@@ -30,10 +30,10 @@ def reasoning(model, loader, ids, species, startIndex):
                 total_preds = torch.cat((total_preds.cpu(), output.cpu()), 0)
 
 def model_dir():
-    return './data/PSFastPPIModels/'
+    return './data/PSFastPPIModels_NDH108_type:FULL/'
 
 def write_result_to_local(output, predicted_number, ids, file_name, batch):
-    indexes = numpy.where(output>0.5)[0]
+    indexes = numpy.where(output>0.9)[0]
     pairsList = [pid_pairs_for(ids, i + predicted_number) + (output[i],) for i in indexes]
     pairsList.insert(0, ["batch", "start", batch])
     with open(file_name, 'a') as f:
@@ -45,7 +45,7 @@ def reason(species):
     file = folder + species + ".fasta"
     ids = ids_from_fasta_file(file)
     shuffle = False
-    batch_size = 20000
+    batch_size = 10000
     pick_num = pick_num_fast
     workers = 0
     drop_last = False
@@ -60,7 +60,7 @@ def reason(species):
                num_workers=workers,
                pin_memory=pin_memory)
 
-    model_path = model_dir() + 'epoch' + "62" + '.pkl'
+    model_path = model_dir() + 'epoch' + "164" + '.pkl'
     model = PSFastPPIModel(device=device, pick_num=pick_num).to(device=device)
 
     checkpoint = torch.load(model_path)
@@ -70,4 +70,4 @@ def reason(species):
 
 
 if __name__ == "__main__":
-    reason("arabidopsis")
+    reason("NDH108")
