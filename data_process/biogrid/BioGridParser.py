@@ -17,7 +17,7 @@ class BioGridParser(object):
             # load csv 
             network = defaultdict(dict)
             existing_ppi = set()
-            with open("./data_process/dataset/HND108.csv", "r") as f:
+            with open("./data_process/dataset/NDH108.csv", "r") as f:
                 reader = csv.reader(f)
                 for row in reader:
                     protein_a = row[0]

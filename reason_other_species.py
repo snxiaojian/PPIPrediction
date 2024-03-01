@@ -51,7 +51,7 @@ def reason(species):
     drop_last = False
     pin_memory = False
     
-    startIndex = 1*batch_size
+    startIndex = (252484 + 67168)*batch_size
     test_dataset = ReasonDatasetFastH5(species, startIndex)
     test_loader = DataLoader(dataset=test_dataset,
                batch_size=batch_size,

@@ -33,7 +33,7 @@ def model_dir():
     return './data/PSFastPPIModels_NDH108_type:FULL/'
 
 def write_result_to_local(output, predicted_number, ids, file_name, batch):
-    indexes = numpy.where(output>0.9)[0]
+    indexes = numpy.where(output>0.99)[0]
     pairsList = [pid_pairs_for(ids, i + predicted_number) + (output[i],) for i in indexes]
     pairsList.insert(0, ["batch", "start", batch])
     with open(file_name, 'a') as f:
@@ -51,7 +51,7 @@ def reason(species):
     drop_last = False
     pin_memory = False
     
-    startIndex = 1*batch_size
+    startIndex = (212695 + 64088 + 71773)*batch_size
     test_dataset = ReasonDatasetFastH5(species, startIndex)
     test_loader = DataLoader(dataset=test_dataset,
                batch_size=batch_size,
@@ -60,7 +60,7 @@ def reason(species):
                num_workers=workers,
                pin_memory=pin_memory)
 
-    model_path = model_dir() + 'epoch' + "164" + '.pkl'
+    model_path = model_dir() + 'epoch' + "104" + '.pkl'
     model = PSFastPPIModel(device=device, pick_num=pick_num).to(device=device)
 
     checkpoint = torch.load(model_path)
