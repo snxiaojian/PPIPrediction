@@ -62,7 +62,9 @@ def negative_ratio_for_species(species, ppi_count):
     negative_ppi_ratio = math.pow(protein_num, 2) / (ppi_count * 2)
     negative_ppi_safe_ratio =  math.pow(protein_num, 2) / (ppi_count * 2 * 1000)
     if species == "NDH108":
-        return 7
+        return 100
+    negative_ppi_safe_ratio = min(negative_ppi_safe_ratio, 100)
+    negative_ppi_safe_ratio = max(negative_ppi_safe_ratio, 0.1)
     return negative_ppi_safe_ratio
 
 def write_ppi_to_tsv(ppi_items, type):
@@ -101,8 +103,7 @@ def generate_dateset(feature_type, target_species=None):
         informations.append(information)
         
         ratio = negative_ratio_for_species(species, ppi_count)
-        ratio = min(ratio, 7)
-        ratio = max(ratio, 0.1)
+
         information = "negative ratio for " + species + ": " + str(ratio) + "\n"
         print(information)
         informations.append(information)
@@ -146,6 +147,6 @@ def generate_dateset(feature_type, target_species=None):
     
         
 if __name__ == "__main__":
-    generate_dateset(feature_type=feature_type_residue_pssm, target_species="NDH108")
+    generate_dateset(feature_type=feature_type_residue_pssm)
     # generate_dateset(feature_type=feature_type_go_graph_pssm)
     # generate_dateset(feature_type=feature_type_graph_pssm)

@@ -22,6 +22,8 @@ class PPIDatasetFastH5(Dataset):
         self.species_dict = species_dict
         self.default_loader = self.disk_loader
         ppi_items=[]
+        ppi_1_count = 0
+        ppi_0_count = 0
         with open('./data/dataset/'+type + "_" + feature_type_residue_pssm +'_ppi.tsv', 'r') as fh: 	        
             for line in fh: 
                 line = line.strip('\n')
@@ -30,8 +32,14 @@ class PPIDatasetFastH5(Dataset):
                 species = self.species_dict[words[0]]
                 if target_species is None or species == target_species:
                     ppi_items.append((words[0],words[1],int(words[2])))
-                
+                    if int(words[2]) == 1:
+                            ppi_1_count += 1
+                    if int(words[2]) == 0:
+                        ppi_0_count += 1
         self.ppi_items = ppi_items
+        print(f"Number of items where ppi is 1: {ppi_1_count}")
+        print(f"Number of items where ppi is 0: {ppi_0_count}")
+        print(f"Total number of items: {len(ppi_items)}")
 
     def __getitem__(self, index):
         p1,p2, label = self.ppi_items[index]

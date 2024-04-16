@@ -30,10 +30,10 @@ def reasoning(model, loader, ids, species, startIndex):
                 total_preds = torch.cat((total_preds.cpu(), output.cpu()), 0)
 
 def model_dir():
-    return './data/PSFastPPIModels_NDH108_type:FULL/'
+    return './data/PSFastPPIModels/'
 
 def write_result_to_local(output, predicted_number, ids, file_name, batch):
-    indexes = numpy.where(output>0.99)[0]
+    indexes = numpy.where(output>0.5)[0]
     pairsList = [pid_pairs_for(ids, i + predicted_number) + (output[i],) for i in indexes]
     pairsList.insert(0, ["batch", "start", batch])
     with open(file_name, 'a') as f:
@@ -42,7 +42,7 @@ def write_result_to_local(output, predicted_number, ids, file_name, batch):
     
 def reason(species):
     folder = fasta_folder_from_feature_type(feature_type_residue_pssm)
-    file = folder + species + ".fasta"
+    file = folder + "expressed_" + species + ".fasta"
     ids = ids_from_fasta_file(file)
     shuffle = False
     batch_size = 10000
@@ -51,7 +51,7 @@ def reason(species):
     drop_last = False
     pin_memory = False
     
-    startIndex = (212695 + 64088 + 71773)*batch_size
+    startIndex = (0)*batch_size
     test_dataset = ReasonDatasetFastH5(species, startIndex)
     test_loader = DataLoader(dataset=test_dataset,
                batch_size=batch_size,
@@ -60,7 +60,7 @@ def reason(species):
                num_workers=workers,
                pin_memory=pin_memory)
 
-    model_path = model_dir() + 'epoch' + "104" + '.pkl'
+    model_path = model_dir() + 'epoch' + "15" + '.pkl'
     model = PSFastPPIModel(device=device, pick_num=pick_num).to(device=device)
 
     checkpoint = torch.load(model_path)

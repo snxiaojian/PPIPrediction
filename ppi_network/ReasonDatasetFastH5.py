@@ -42,7 +42,7 @@ class ReasonDatasetFastH5(Dataset):
         self.startIndex = startIndex
         self.default_loader = self.disk_loader
         folder = fasta_folder_from_feature_type(feature_type_residue_pssm)
-        file = folder + species + ".fasta"
+        file = folder + "expressed_" + species + ".fasta"
         self.records = records_from_fasta_file(file)
         self.ids = ids_from_fasta_file(file)
         self.proteinNum = len(self.ids)

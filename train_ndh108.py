@@ -40,7 +40,7 @@ def predicting(model, loader):
     return total_labels.numpy().flatten(),total_preds.numpy().flatten()
 
 def model_dir_for(target_species, train_type):
-    return './data/PSFastPPIModels_' + target_species + "_type:" + train_type.name + '/'
+    return './data/PSFastPPIModels'
 
 def train(target_species, train_type = TrainType.FULL):
     shuffle = False
@@ -162,7 +162,7 @@ def optimizer_for_train(model, train_type):
     return optimizer
     
 def load_pretrained_model(pick_num):
-    model_path = './data/PSFastPPIModels/' + 'epoch' + "62" + '.pkl'
+    model_path = './data/PSFastPPIModels/' + 'epoch' + "12" + '.pkl'
     model = PSFastPPIModel(device=device, pick_num=pick_num).to(device=device)
 
     checkpoint = torch.load(model_path)
@@ -199,7 +199,8 @@ def load_pretrained_model(pick_num):
     return model
 
 if __name__ == "__main__":
-    train("NDH108", train_type=TrainType.FULL)
+    # train("NDH108", train_type=TrainType.FULL)
     # train("NDH108", train_type=TrainType.ONLY_FC)
     # train("NDH108", train_type=TrainType.ONLY_OUT)
     # train("NDH108", train_type=TrainType.FC_AND_OUT)
+    load_pretrained_model(pick_num=50)
